@@ -1,24 +1,44 @@
 {
-  "name": "hostel-backend",
+  "name": "hostel-ease-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "AI-Powered Hostel Management SaaS - Backend API",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed": "node utils/seedData.js",
+    "migrate": "node utils/migrateToMultiTenancy.js"
   },
-  "author": "Muhammad Danish Azeem",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "hostel",
+    "management",
+    "saas",
+    "multi-tenant",
+    "ai",
+    "chatbot"
+  ],
+  "author": "Your Name",
   "license": "MIT",
   "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.3",
     "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "express-validator": "^7.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "express-validator": "^7.0.1",
-    "json2csv": "^6.0.0-alpha.2",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.1.0",
-    "qrcode": "^1.5.4"
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^7.0.0",
+    "socket.io": "^4.6.1",
+    "multer": "^1.4.5-lts.1",
+    "natural": "^6.1.0",
+    "compromise": "^14.8.2",
+    "axios": "^1.4.0",
+    "express-mongo-sanitize": "^2.2.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

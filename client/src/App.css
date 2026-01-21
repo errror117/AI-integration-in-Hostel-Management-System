@@ -39,10 +39,11 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-text-fill-color: #fff;
-    transition: background-color 5000000s ease-in-out 0s;
+  transition: background-color 5000000s ease-in-out 0s;
 }
 
 @layer base {
+
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;

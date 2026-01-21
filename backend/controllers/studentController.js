@@ -1,95 +1,89 @@
 const { generateToken, verifyToken } = require("../utils/auth");
 const { validationResult } = require("express-validator");
 const { Student, Hostel, User } = require("../models");
+const Organization = require("../models/Organization");
 const bcrypt = require("bcryptjs");
 const Parser = require("json2csv").Parser;
 const mongoose = require("mongoose");
 const QRCode = require("qrcode");
+const emailService = require("../services/emailService");
 
-// add near top where other imports exist (if mongoose already imported, ignore)
-
-// Add this function in the same file
+// Get statistics for students
 const getStats = async (req, res) => {
   try {
-    // total students
-    const totalStudents = await Student.countDocuments();
+    const organizationId = req.organizationId; // From tenant middleware
 
-    // hostels + capacity
-    const hostels = await Hostel.find().lean();
-
-    // students grouped by hostel id
-    const studentsPerHostelAgg = await Student.aggregate([
-      { $group: { _id: "$hostel", count: { $sum: 1 } } },
-    ]);
-
-    // map counts for quick lookup
-    const countsByHostel = {};
-    studentsPerHostelAgg.forEach((h) => {
-      countsByHostel[String(h._id)] = h.count;
-    });
-
-    const hostelsWithStats = hostels.map((h) => {
-      const occupied = countsByHostel[String(h._id)] || 0;
-      const capacity = h.capacity || 0;
-      const vacant = Math.max(capacity - occupied, 0);
-      return {
-        _id: h._id,
-        name: h.name,
-        capacity,
-        occupied,
-        vacant,
-      };
-    });
-
-    // students by department
-    const byDeptAgg = await Student.aggregate([
-      { $group: { _id: "$dept", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
-
-    // students by batch/year
-    const byBatchAgg = await Student.aggregate([
-      { $group: { _id: "$batch", count: { $sum: 1 } } },
-      { $sort: { _id: 1 } },
-    ]);
-
-    return res.json({
-      success: true,
+    const [
       totalStudents,
-      hostels: hostelsWithStats,
-      byDept: byDeptAgg,
-      byBatch: byBatchAgg,
+      activeStudents,
+      inactiveStudents,
+      studentsByHostel,
+      studentsByBatch,
+      studentsByDept,
+    ] = await Promise.all([
+      Student.countDocuments({ organizationId }),
+      Student.countDocuments({ organizationId, isActive: true }),
+      Student.countDocuments({ organizationId, isActive: false }),
+
+      Student.aggregate([
+        { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
+        { $group: { _id: "$hostel", count: { $sum: 1 } } },
+        { $lookup: { from: "hostels", localField: "_id", foreignField: "_id", as: "hostelInfo" } },
+        { $unwind: "$hostelInfo" },
+        { $project: { hostel: "$hostelInfo.name", count: 1 } },
+      ]),
+
+      Student.aggregate([
+        { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
+        { $group: { _id: "$batch", count: { $sum: 1 } } },
+        { $sort: { _id: -1 } },
+      ]),
+
+      Student.aggregate([
+        { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
+        { $group: { _id: "$dept", count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        total: totalStudents,
+        active: activeStudents,
+        inactive: inactiveStudents,
+        byHostel: studentsByHostel,
+        byBatch: studentsByBatch,
+        byDept: studentsByDept,
+      },
     });
   } catch (err) {
     console.error("Get Stats Error:", err);
-    return res
-      .status(500)
-      .json({ success: false, errors: [{ msg: "Server error" }] });
+    res.status(500).json({ success: false, error: "Server error" });
   }
 };
 
 // Escape regex helper
-const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const esc = (s) => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
 
 // Resolve hostel by _id or name (case-insensitive)
-async function resolveHostel(hostelValue) {
-  if (!hostelValue) return null;
-  const v = String(hostelValue).trim();
-
-  if (mongoose.Types.ObjectId.isValid(v)) {
-    return Hostel.findById(v);
+const resolveHostel = async (hostelValue, organizationId) => {
+  if (mongoose.Types.ObjectId.isValid(hostelValue)) {
+    return await Hostel.findOne({ _id: hostelValue, organizationId });
   }
-  return Hostel.findOne({ name: { $regex: `^${esc(v)}$`, $options: "i" } });
-}
+  return await Hostel.findOne({
+    organizationId,
+    name: new RegExp(`^${esc(hostelValue)}$`, "i"),
+  });
+};
 
 const registerStudent = async (req, res) => {
-  // console.log(req.body);
   let success = false;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // console.log(errors);
     return res.status(400).json({ success, errors: errors.array() });
   }
+
+  const organizationId = req.organizationId; // From tenant middleware
 
   const {
     name,
@@ -107,23 +101,28 @@ const registerStudent = async (req, res) => {
     hostel,
     password,
   } = req.body;
+
   try {
-    let student = await Student.findOne({ cms_id });
+    // Check if student already exists in THIS organization
+    let student = await Student.findOne({ organizationId, cms_id });
 
     if (student) {
       return res
         .status(400)
-        .json({ success, errors: [{ msg: "Student already exists" }] });
+        .json({ success, errors: [{ msg: "Student already exists in your organization" }] });
     }
 
-    let existingUser = await User.findOne({ email });
+    // Check if email already exists in THIS organization
+    let existingUser = await User.findOne({ organizationId, email });
     if (existingUser) {
       return res.status(400).json({
         success,
-        errors: [{ msg: "Email already registered" }],
+        errors: [{ msg: "Email already registered in your organization" }],
       });
     }
-    let shostel = await resolveHostel(hostel);
+
+    // Resolve hostel within organization
+    let shostel = await resolveHostel(hostel, organizationId);
     if (!shostel) {
       return res.status(400).json({
         success,
@@ -134,15 +133,23 @@ const registerStudent = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create user with organizationId
     let user = new User({
+      organizationId,
       email,
       password: hashedPassword,
+      role: 'student',
       isAdmin: false,
     });
 
     await user.save();
 
+    // Generate QR code
+    const qrData = `CMS:${cms_id}, Name:${name}, Room:${room_no}, Hostel:${shostel.name}`;
+    const qrImage = await QRCode.toDataURL(qrData);
+
     student = new Student({
+      organizationId,
       name,
       cms_id,
       room_no,
@@ -157,20 +164,17 @@ const registerStudent = async (req, res) => {
       cnic,
       user: user._id,
       hostel: shostel._id,
+      qrCode: qrImage,
     });
 
-    // inside registerStudent, right before student.save()
-
-    // generate QR data (customize fields as you want)
-    const qrData = `CMS:${cms_id}, Name:${name}, Room:${room_no}, Hostel:${shostel.name}`;
-    const qrImage = await QRCode.toDataURL(qrData);
-
-    // attach QR code to student
-    student.qrCode = qrImage;
-
-    // await student.save();
-
     await student.save();
+
+    // Send welcome email (async, don't wait)
+    const organization = await Organization.findById(organizationId);
+    if (organization) {
+      emailService.sendWelcomeEmail(student, organization, { password })
+        .catch(err => console.error('Welcome email failed:', err.message));
+    }
 
     success = true;
     return res.status(201).json({ success, student });
@@ -182,39 +186,34 @@ const registerStudent = async (req, res) => {
 
 const getStudent = async (req, res) => {
   try {
-    // console.log(req.body);
     let success = false;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      // console.log(errors);
-      return res.status(400).json({ success, errors: errors.array() });
+
+    // Check if user is authenticated (from tenantMiddleware)
+    if (!req.userId) { // ✅ Changed: tenantMiddleware sets req.userId
+      return res.status(401).json({ success, errors: "Authentication required" });
     }
 
-    const { isAdmin } = req.body;
-
-    if (isAdmin) {
-      return res
-        .status(400)
-        .json({ success, errors: "Admin cannot access this route" });
+    // Prevent admin from accessing this route
+    if (req.userRole === 'org_admin' || req.userRole === 'super_admin') { // ✅ Changed: Check role from tenantMiddleware
+      return res.status(403).json({ success, errors: "Admin cannot access this route" });
     }
 
-    const { token } = req.body;
+    const organizationId = req.organizationId;
 
-    const decoded = verifyToken(token);
-
-    const student = await Student.findOne({ user: decoded.userId }).select(
-      "-password"
-    );
+    // Student can only access their own data within their organization
+    const student = await Student.findOne({
+      organizationId,
+      user: req.userId // ✅ Changed: Use req.userId from tenantMiddleware
+    }).select("-password");
 
     if (!student) {
-      return res
-        .status(400)
-        .json({ success, errors: "Student does not exist" });
+      return res.status(404).json({ success, errors: "Student does not exist" });
     }
 
     success = true;
     res.json({ success, student });
   } catch (err) {
+    console.error('Get student error:', err);
     res.status(500).json({ success, errors: "Server error" });
   }
 };
@@ -223,165 +222,166 @@ const getAllStudents = async (req, res) => {
   let success = false;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // console.log(errors);
     return res.status(400).json({ success, errors: errors.array() });
   }
 
+  const organizationId = req.organizationId;
   let { hostel } = req.body;
 
   try {
-    // const shostel = await Hostel.findById(hostel);
-    const shostel = await resolveHostel(hostel);
-    if (!shostel) {
-      return res
-        .status(400)
-        .json({ success, errors: [{ msg: "Invalid hostel" }] });
+    let query = { organizationId };
+
+    // If hostel specified, filter by it (within organization)
+    if (hostel) {
+      const shostel = await resolveHostel(hostel, organizationId);
+      if (!shostel) {
+        return res
+          .status(400)
+          .json({ success, errors: [{ msg: "Invalid hostel" }] });
+      }
+      query.hostel = shostel._id;
     }
-    const students = await Student.find({ hostel: shostel.id }).select(
-      "-password"
-    );
+
+    const students = await Student.find(query).select("-password");
 
     success = true;
-    res.json({ success, students });
+    res.json({ success, students, count: students.length });
   } catch (err) {
+    console.error("Get All Students Error:", err);
     res.status(500).json({ success, errors: [{ msg: "Server error" }] });
   }
 };
 
 const updateStudent = async (req, res) => {
-  let success = false;
   try {
-    // const student = await Student.findById(req.student.id).select('-password');
-    const student = await Student.findById(req.body._id || req.body.id).select(
-      "-password"
-    );
+    let success = false;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success, errors: errors.array() });
+    }
+
+    const organizationId = req.organizationId;
     const {
-      name,
       cms_id,
-      room_no,
-      batch,
-      dept,
-      course,
+      name,
       email,
       father_name,
       contact,
       address,
       dob,
       cnic,
-      user,
-      hostel,
+      batch,
+      dept,
+      course,
+      room_no,
     } = req.body;
 
+    // Find student in THIS organization only
+    let student = await Student.findOne({ organizationId, cms_id });
+
+    if (!student) {
+      return res
+        .status(400)
+        .json({ success, errors: [{ msg: "Student does not exist in your organization" }] });
+    }
+
+    // Update student fields
     student.name = name;
-    student.cms_id = cms_id;
-    student.room_no = room_no;
-    student.batch = batch;
-    student.dept = dept;
-    student.course = course;
     student.email = email;
     student.father_name = father_name;
     student.contact = contact;
     student.address = address;
     student.dob = dob;
     student.cnic = cnic;
-    student.hostel = hostel;
+    student.batch = batch;
+    student.dept = dept;
+    student.course = course;
+    student.room_no = room_no;
 
     await student.save();
 
     success = true;
     res.json({ success, student });
   } catch (err) {
+    console.error("Update Student Error:", err);
     res.status(500).json({ success, errors: [{ msg: "Server error" }] });
   }
 };
 
 const deleteStudent = async (req, res) => {
   try {
-    // console.log(req.body);
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // console.log(errors);
       return res.status(400).json({ success, errors: errors.array() });
     }
 
-    const { id } = req.body;
+    const organizationId = req.organizationId;
+    const { cms_id } = req.body;
 
-    const student = await Student.findById(id).select("-password");
+    // Find student in THIS organization only
+    let student = await Student.findOne({ organizationId, cms_id });
 
     if (!student) {
       return res
         .status(400)
-        .json({ success, errors: [{ msg: "Student does not exist" }] });
+        .json({ success, errors: [{ msg: "Student does not exist in your organization" }] });
     }
 
-    const user = await User.findByIdAndDelete(student.user);
+    const user = await User.findById(student.user);
 
-    await Student.deleteOne(student);
+    if (user) {
+      await User.deleteOne({ _id: user._id });
+    }
+
+    await Student.deleteOne({ _id: student._id });
 
     success = true;
     res.json({ success, msg: "Student deleted successfully" });
   } catch (err) {
+    console.error("Delete Student Error:", err);
     res.status(500).json({ success, errors: [{ msg: "Server error" }] });
   }
 };
 
 const csvStudent = async (req, res) => {
-  let success = false;
   try {
-    // console.log(req.body);
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      // console.log(errors);
-      return res.status(400).json({ success, errors: errors.array() });
+    const organizationId = req.organizationId;
+
+    // Get all students for THIS organization only
+    const students = await Student.find({ organizationId }).select("-password -qrCode");
+
+    if (!students || students.length === 0) {
+      return res.status(404).json({
+        success: false,
+        errors: [{ msg: "No students found in your organization" }],
+      });
     }
 
-    const { hostel } = req.body;
-
-    const shostel = await Hostel.findById(hostel);
-
-    const students = await Student.find({ hostel: shostel.id }).select(
-      "-password"
-    );
-
-    students.forEach((student) => {
-      student.hostel_name = shostel.name;
-      student.d_o_b = new Date(student.dob).toDateString().slice(4);
-      student.cnic_no =
-        student.cnic.slice(0, 5) +
-        "-" +
-        student.cnic.slice(5, 12) +
-        "-" +
-        student.cnic.slice(12);
-      student.contact_no = "+92 " + student.contact.slice(1);
-    });
-
+    // Define CSV fields
     const fields = [
       "name",
       "cms_id",
-      "room_no",
+      "email",
       "batch",
       "dept",
       "course",
-      "email",
+      "room_no",
+      "contact",
       "father_name",
-      "contact_no",
+      "cnic",
       "address",
-      "d_o_b",
-      "cnic_no",
-      "hostel_name",
     ];
 
-    const opts = { fields };
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(students);
 
-    const parser = new Parser(opts);
-
-    const csv = parser.parse(students);
-
-    success = true;
-    res.json({ success, csv });
+    res.header("Content-Type", "text/csv");
+    res.attachment(`students_export_${new Date().toISOString().split('T')[0]}.csv`);
+    return res.send(csv);
   } catch (err) {
-    res.status(500).json({ success, errors: [{ msg: "Server error" }] });
+    console.error("CSV Export Error:", err);
+    res.status(500).json({ success: false, errors: [{ msg: "Server error" }] });
   }
 };
 

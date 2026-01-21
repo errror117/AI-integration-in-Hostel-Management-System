@@ -6,33 +6,63 @@ const User = require('../models/User');
 exports.login = async (req, res, next) => {
     let success = false;
     try {
+        console.log('🔐 LOGIN ATTEMPT:', { email: req.body.email, passwordLength: req.body.password?.length });
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({success, errors: errors.array() });
+            return res.status(400).json({ success, errors: errors.array() });
         }
-        
+
         const { email, password } = req.body;
 
         try {
             let user = await User.findOne({ email });
+
             if (!user) {
-                return res.status(400).json({success, errors: [{ msg: 'Invalid credentials' }] });
+                console.log('❌ User not found:', email);
+                return res.status(400).json({ success, errors: [{ msg: 'Invalid credentials' }] });
             }
 
+            console.log('✅ User found:', { email: user.email, isActive: user.isActive, role: user.role });
+
+            // Check if user account is active
+            if (!user.isActive) {
+                return res.status(403).json({ success, errors: [{ msg: 'Account is inactive. Contact support.' }] });
+            }
+
+            console.log('🔑 Comparing passwords...');
             const isMatch = await bcrypt.compare(password, user.password);
+            console.log('🔑 Password match result:', isMatch);
 
             if (!isMatch) {
-                return res.status(400).json({success, errors: [{ msg: 'Invalid credentials' }] });
+                console.log('❌ Password mismatch');
+                return res.status(400).json({ success, errors: [{ msg: 'Invalid credentials' }] });
             }
-            const token = generateToken(user.id, user.isAdmin);
+
+            console.log('✅ Login successful!');
+
+            // Update last login
+            user.lastLogin = new Date();
+            user.lastLoginIP = req.ip || req.connection.remoteAddress;
+            await user.save();
+
+            // Generate token with organizationId and role for multi-tenancy
+            const token = generateToken(
+                user._id,
+                user.organizationId,
+                user.role,
+                user.isAdmin
+            );
+
             res.status(200).json({
                 success: true,
                 data: {
                     token,
                     user: {
-                        id: user.id,
+                        id: user._id,
                         email: user.email,
+                        role: user.role,
                         isAdmin: user.isAdmin,
+                        organizationId: user.organizationId
                     },
                 },
             });
@@ -53,7 +83,7 @@ exports.changePassword = async (req, res, next) => {
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            return res.status(400).json({success, errors: errors.array() });
+            return res.status(400).json({ success, errors: errors.array() });
         }
 
         const { email, password, newPassword } = req.body;
@@ -61,13 +91,13 @@ exports.changePassword = async (req, res, next) => {
         try {
             let user = await User.findOne({ email });
             if (!user) {
-                return res.status(400).json({success, errors: [{ msg: 'Invalid credentials' }] });
+                return res.status(400).json({ success, errors: [{ msg: 'Invalid credentials' }] });
             }
 
             const oldPassword = await bcrypt.compare(password, user.password);
 
             if (!oldPassword) {
-                return res.status(400).json({success, errors: [{ msg: 'Invalid credentials' }] });
+                return res.status(400).json({ success, errors: [{ msg: 'Invalid credentials' }] });
             }
 
             const salt = await bcrypt.genSalt(10);
@@ -93,18 +123,18 @@ exports.verifySession = async (req, res, next) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({errors: errors.array(), success});
+        return res.status(400).json({ errors: errors.array(), success });
     }
     try {
         const { token } = req.body;
         const decoded = verifyToken(token);
         if (decoded) {
             success = true;
-            return res.status(200).json({success, data: decoded});
+            return res.status(200).json({ success, data: decoded });
         }
-        return res.status(400).json({success, "message": "Invalid token"});
+        return res.status(400).json({ success, "message": "Invalid token" });
     } catch (err) {
         console.error(err.message);
-        return res.status(500).json({success, "message": "Server Error"});
+        return res.status(500).json({ success, "message": "Server Error" });
     }
 }

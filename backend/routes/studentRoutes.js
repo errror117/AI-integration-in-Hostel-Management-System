@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { check } = require("express-validator");
 const { validationResult } = require("express-validator");
-const Student = require("../models/student");
+const Student = require("../models/Student"); // ✅ Fixed: Changed 'student' to 'Student' (capital S) to match actual filename
 const QRCode = require("qrcode");
+const { protect } = require("../middleware/authMiddleware");
+const { tenantMiddleware } = require("../middleware/tenantMiddleware"); // ✅ Fixed: Changed to 'tenantMiddleware' (actual export name)
 
 // @route  GET api/student/:id/qr
 // @desc   Generate QR for student
@@ -102,15 +104,12 @@ router.post(
   registerStudent
 );
 // @route  POST api/student/get-student
-// @desc   Get student by CMS ID
-// @access Public
+// @desc   Get student data for authenticated user
+// @access Private (Student only)
 router.post(
   "/get-student",
-  [
-    check("isAdmin", "isAdmin is required").notEmpty(),
-    check("token", "You donot have a valid token").notEmpty(),
-  ],
-  getStudent
+  tenantMiddleware, // ✅ Only 1 middleware needed: It checks login AND gets organization
+  getStudent        // ✅ Then get student data
 );
 
 // @route  POST api/student/get-all-students

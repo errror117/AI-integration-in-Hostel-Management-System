@@ -12,9 +12,9 @@ function Attendance() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ hostel: JSON.parse(localStorage.getItem("hostel"))._id }),
-        });
+      },
+      body: JSON.stringify({ hostel: JSON.parse(localStorage.getItem("hostel"))._id }),
+    });
     setProgress(40);
     const markedData = await marked.json();
     setProgress(50)
@@ -60,7 +60,7 @@ function Attendance() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ student:id, status: isPresent? "present" : "absent" }),
+      body: JSON.stringify({ student: id, status: isPresent ? "present" : "absent" }),
     });
     const response = await data.json();
     if (response.success) {
@@ -147,19 +147,79 @@ function Attendance() {
     </div>
   );
 
+  const markAllAttendance = async (isPresent) => {
+    if (unmarkedStudents.length === 0) {
+      toast.info("All students are already marked!");
+      return;
+    }
+
+    setProgress(20);
+    const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
+
+    try {
+      const response = await fetch("http://localhost:3000/api/attendance/markAll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hostel,
+          status: isPresent ? "present" : "absent",
+          students: unmarkedStudents.map(s => s.id)
+        }),
+      });
+
+      setProgress(70);
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(`All ${unmarkedStudents.length} students marked ${isPresent ? "present" : "absent"}!`);
+        // Refresh the list
+        getALL();
+      } else {
+        toast.error(data.message || "Failed to mark attendance");
+      }
+    } catch (error) {
+      toast.error("Error marking attendance");
+      console.error(error);
+    }
+    setProgress(100);
+  };
 
   return (
     <div className="w-full h-screen flex flex-col gap-3 items-center xl:pt-0 md:pt-40 pt-64 justify-center overflow-auto max-h-screen">
       <LoadingBar color="#0000FF" progress={progress} onLoaderFinished={() => setProgress(0)} />
       <h1 className="text-white font-bold text-5xl">Attendance</h1>
-      <p className="text-white text-xl mb-10">Date: {date}</p>
+      <p className="text-white text-xl mb-2">Date: {date}</p>
+
+      {/* Bulk Action Buttons */}
+      {unmarkedStudents.length > 0 && (
+        <div className="flex gap-3 mb-4">
+          <button
+            onClick={() => markAllAttendance(true)}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            Mark All Present ({unmarkedStudents.length})
+          </button>
+          <button
+            onClick={() => markAllAttendance(false)}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+            Mark All Absent ({unmarkedStudents.length})
+          </button>
+        </div>
+      )}
+
       <div className="flex gap-5 flex-wrap items-center justify-center">
         <>{graph}</>
         <div className="flow-root md:w-[400px] w-full bg-neutral-950 px-7 py-5 rounded-lg shadow-xl max-h-[250px] overflow-auto">
           <span
-            className={`font-bold text-xl text-white ${
-              unmarkedStudents.length ? "block" : "hidden"
-            }`}
+            className={`font-bold text-xl text-white ${unmarkedStudents.length ? "block" : "hidden"
+              }`}
           >
             Unmarked Students
           </span>
@@ -167,80 +227,80 @@ function Attendance() {
             {unmarkedStudents.length === 0
               ? "All students are marked!"
               : unmarkedStudents.map((student) =>
-                  student.attendance === undefined ? (
-                    <li
-                      className="py-3 sm:py-4 px-5 rounded hover:bg-neutral-700 hover:scale-105 transition-all"
-                      key={student.id}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0 text-white">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-6 h-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate text-white">
-                            {student.name}
-                          </p>
-                          <p className="text-sm truncate text-gray-400">
-                            {student.cms} | Room: {student.room}
-                          </p>
-                        </div>
-                        <button
-                          className="hover:underline hover:text-green-600 hover:scale-125 transition-all"
-                          onClick={() => markAttendance(student.id, true)}
+                student.attendance === undefined ? (
+                  <li
+                    className="py-3 sm:py-4 px-5 rounded hover:bg-neutral-700 hover:scale-105 transition-all"
+                    key={student.id}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 text-white">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-6 h-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          className="hover:underline hover:text-red-600 hover:scale-125 transition-all"
-                          onClick={() => markAttendance(student.id, false)}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-6 h-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </button>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                          />
+                        </svg>
                       </div>
-                    </li>
-                  ) : (
-                    ""
-                  )
-                )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate text-white">
+                          {student.name}
+                        </p>
+                        <p className="text-sm truncate text-gray-400">
+                          {student.cms} | Room: {student.room}
+                        </p>
+                      </div>
+                      <button
+                        className="hover:underline hover:text-green-600 hover:scale-125 transition-all"
+                        onClick={() => markAttendance(student.id, true)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        className="hover:underline hover:text-red-600 hover:scale-125 transition-all"
+                        onClick={() => markAttendance(student.id, false)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </li>
+                ) : (
+                  ""
+                )
+              )}
           </ul>
         </div>
       </div>
@@ -254,7 +314,7 @@ function Attendance() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme= "dark"
+        theme="dark"
       />
     </div>
   );

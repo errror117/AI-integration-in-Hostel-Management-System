@@ -2,26 +2,41 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const MessOffSchema = new Schema({
-    student:{
-        type:Schema.Types.ObjectId,
-        ref:'student'
+    // Multi-tenancy
+    organizationId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true,
+        index: true
     },
-    leaving_date:{
-        type:Date,
-        required:true
+
+    student: {
+        type: Schema.Types.ObjectId,
+        ref: 'Student'
     },
-    return_date:{
-        type:Date,
-        required:true
+    leaving_date: {
+        type: Date,
+        required: true
     },
-    status:{
-        type:String,
-        default:'pending'
+    return_date: {
+        type: Date,
+        required: true
     },
-    request_date:{
-        type:Date,
-        default:Date.now
+    status: {
+        type: String,
+        default: 'pending'
+    },
+    request_date: {
+        type: Date,
+        default: Date.now
     }
+}, {
+    timestamps: true
 })
 
-module.exports = MessOff = mongoose.model('messoff',MessOffSchema);
+// Indexes for multi-tenancy
+MessOffSchema.index({ organizationId: 1, student: 1 });
+MessOffSchema.index({ organizationId: 1, status: 1 });
+MessOffSchema.index({ organizationId: 1, leaving_date: 1 });
+
+module.exports = MessOff = mongoose.model('MessOff', MessOffSchema);

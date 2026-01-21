@@ -1,7 +1,7 @@
 {
-  "name": "web",
-  "version": "1.0.0",
-  "description": "It is a MERN application built for Hostel Management System",
+  "name": "hostel-ease",
+  "version": "2.0.0",
+  "description": "Hostel Ease - Multi-tenant AI-Powered Hostel Management SaaS Platform",
   "main": "index.js",
   "scripts": {
     "client": "npm run dev --prefix client",

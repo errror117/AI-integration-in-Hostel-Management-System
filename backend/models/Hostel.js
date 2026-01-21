@@ -2,26 +2,39 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const HostelSchema = new Schema({
-    name:{
-        type:String,
-        required:true
+    // Multi-tenancy - organization can have multiple hostels
+    organizationId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true,
+        index: true
     },
-    location:{
-        type:String,
-        required:true
+
+    name: {
+        type: String,
+        required: true
     },
-    rooms:{
-        type:Number,
-        required:true
+    location: {
+        type: String,
+        required: true
     },
-    capacity:{
-        type:Number,
-        required:true
+    rooms: {
+        type: Number,
+        required: true
     },
-    vacant:{
-        type:Number,
-        required:true
+    capacity: {
+        type: Number,
+        required: true
+    },
+    vacant: {
+        type: Number,
+        required: true
     }
+}, {
+    timestamps: true
 })
 
-module.exports = Hostel = mongoose.model('hostel',HostelSchema);
+// Indexes for multi-tenancy
+HostelSchema.index({ organizationId: 1, name: 1 });
+
+module.exports = Hostel = mongoose.model('Hostel', HostelSchema);

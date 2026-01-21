@@ -355,14 +355,23 @@ export default function AdminSignIn() {
     if (result.success) {
       localStorage.setItem("token", result.data.token);
 
-      // ✅ send token in header, no need to send body
+      // ✅ CHECK IF USER IS SUPER ADMIN
+      if (result.data.user.role === 'super_admin') {
+        // Super admin - redirect directly
+        localStorage.setItem("user", JSON.stringify(result.data.user));
+        navigate("/superadmin");
+        setLoader(false);
+        return;
+      }
+
+      // Regular admin - fetch admin profile
       let admin = await fetch("http://localhost:3000/api/admin/get-admin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${result.data.token}`,
         },
-        body: JSON.stringify({}), // send empty body to keep it POST
+        body: JSON.stringify({}),
       });
 
       let adminResult = await admin.json();
@@ -372,7 +381,7 @@ export default function AdminSignIn() {
         await getHostel();
         navigate("/admin-dashboard");
       } else {
-        toast.error(adminResult.errors[0].msg, {
+        toast.error(adminResult.message || "Admin profile not found", {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: false,
@@ -384,7 +393,7 @@ export default function AdminSignIn() {
         });
       }
     } else {
-      toast.error(result.errors[0].msg, {
+      toast.error(result.message || "Login failed", {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,

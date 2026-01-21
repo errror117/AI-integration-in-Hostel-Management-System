@@ -2,48 +2,63 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const AdminSchema = new Schema({
-    name:{
-        type:String,
-        required:true
+    // Multi-tenancy - CRITICAL for data isolation
+    organizationId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true,
+        index: true
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true
+
+    name: {
+        type: String,
+        required: true
     },
-    father_name:{
-        type:String,
-        required:true
+    email: {
+        type: String,
+        required: true,
+        lowercase: true,
+        trim: true
+        // Email should be unique within organization
     },
-    contact:{
-        type:String,
-        required:true
+    father_name: {
+        type: String,
+        required: true
     },
-    address:{
-        type:String,
-        required:true
+    contact: {
+        type: String,
+        required: true
     },
-    dob:{
-        type:Date,
-        required:true
+    address: {
+        type: String,
+        required: true
     },
-    cnic:{
-        type:String,
-        required:true,
-        unique:true
+    dob: {
+        type: Date,
+        required: true
     },
-    user:{
-        type:Schema.Types.ObjectId,
-        ref:'user'
+    cnic: {
+        type: String,
+        required: true
+        // CNIC should be unique within organization
     },
-    hostel:{
-        type:Schema.Types.ObjectId,
-        ref:'hostel'
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     },
-    date:{
-        type:Date,
-        default:Date.now
+    hostel: {
+        type: Schema.Types.ObjectId,
+        ref: 'Hostel'
+    },
+    date: {
+        type: Date,
+        default: Date.now
     }
 })
 
-module.exports = Admin = mongoose.model('admin',AdminSchema);
+// Compound indexes for multi-tenancy
+AdminSchema.index({ organizationId: 1, email: 1 }, { unique: true });
+AdminSchema.index({ organizationId: 1, cnic: 1 }, { unique: true });
+AdminSchema.index({ organizationId: 1, hostel: 1 });
+
+module.exports = Admin = mongoose.model('Admin', AdminSchema);

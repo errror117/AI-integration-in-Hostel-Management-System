@@ -2,18 +2,33 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const AttendanceSchema = new Schema({
-    student:{
-        type:Schema.Types.ObjectId,
-        ref:'student'
+    // Multi-tenancy
+    organizationId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true,
+        index: true
     },
-    date:{
-        type:Date,
-        default:Date.now
+
+    student: {
+        type: Schema.Types.ObjectId,
+        ref: 'Student'
     },
-    status:{
-        type:String,
-        required:true
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    status: {
+        type: String,
+        required: true
     }
+}, {
+    timestamps: true
 })
 
-module.exports = Attendance = mongoose.model('attendance',AttendanceSchema);
+// Indexes for multi-tenancy
+AttendanceSchema.index({ organizationId: 1, student: 1, date: 1 });
+AttendanceSchema.index({ organizationId: 1, date: -1 });
+AttendanceSchema.index({ organizationId: 1, status: 1 });
+
+module.exports = Attendance = mongoose.model('Attendance', AttendanceSchema);

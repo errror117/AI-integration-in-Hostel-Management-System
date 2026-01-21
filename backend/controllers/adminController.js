@@ -11,6 +11,8 @@ const registerAdmin = async (req, res) => {
       return res.status(400).json({ success, errors: errors.array() });
     }
 
+    const organizationId = req.organizationId; // From tenant middleware
+
     const {
       name,
       email,
@@ -24,28 +26,50 @@ const registerAdmin = async (req, res) => {
     } = req.body;
 
     try {
-      let admin = await Admin.findOne({ email });
+      // Check if admin exists in THIS organization
+      let admin = await Admin.findOne({ organizationId, email });
 
       if (admin) {
         return res
           .status(400)
-          .json({ success, errors: [{ msg: "Admin already exists" }] });
+          .json({ success, errors: [{ msg: "Admin already exists in your organization" }] });
       }
 
-      let shostel = await Hostel.findOne({ name: hostel });
+      // Check if user exists in THIS organization
+      let existingUser = await User.findOne({ organizationId, email });
+      if (existingUser) {
+        return res.status(400).json({
+          success,
+          errors: [{ msg: "Email already registered in your organization" }],
+        });
+      }
+
+      // Find hostel within organization
+      let shostel = await Hostel.findOne({ organizationId, name: hostel });
+      if (!shostel) {
+        return res.status(400).json({
+          success,
+          errors: [{ msg: "Hostel not found in your organization" }],
+        });
+      }
 
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
+      // Create user with organization and role
       let user = new User({
+        organizationId,
         email,
         password: hashedPassword,
+        role: 'sub_admin', // Sub-admin role
         isAdmin: true,
       });
 
       await user.save();
 
+      // Create admin profile
       admin = new Admin({
+        organizationId,
         name,
         email,
         father_name,
@@ -53,21 +77,23 @@ const registerAdmin = async (req, res) => {
         address,
         dob,
         cnic,
-        user: user.id,
-        hostel: shostel.id,
+        user: user._id,
+        hostel: shostel._id,
       });
 
       await admin.save();
 
-      const token = generateToken(user.id, user.isAdmin);
+      // Generate token with organizationId and role
+      const token = generateToken(user._id, user.organizationId, user.role, user.isAdmin);
 
       success = true;
       res.json({ success, token, admin });
     } catch (error) {
+      console.error("Register Admin Error:", error);
       res.status(500).send("Server error");
     }
   } catch (err) {
-    res.status(500).json({ success, errors: [{ msg: "Server error" }] });
+    res.status(500).json({ success: false, errors: [{ msg: "Server error" }] });
   }
 };
 
@@ -79,17 +105,20 @@ const updateAdmin = async (req, res) => {
       return res.status(400).json({ success, errors: errors.array() });
     }
 
+    const organizationId = req.organizationId;
     const { name, email, father_name, contact, address, dob, cnic } = req.body;
 
     try {
-      let admin = await Admin.findOne({ email });
+      // Find admin in THIS organization only
+      let admin = await Admin.findOne({ organizationId, email });
 
       if (!admin) {
         return res
           .status(400)
-          .json({ success, errors: [{ msg: "Admin does not exists" }] });
+          .json({ success, errors: [{ msg: "Admin does not exist in your organization" }] });
       }
 
+      // Update admin fields
       admin.name = name;
       admin.email = email;
       admin.father_name = father_name;
@@ -103,10 +132,11 @@ const updateAdmin = async (req, res) => {
       success = true;
       res.json({ success, admin });
     } catch (error) {
+      console.error("Update Admin Error:", error);
       res.status(500).send("Server error");
     }
   } catch (err) {
-    res.status(500).json({ success, errors: [{ msg: "Server error" }] });
+    res.status(500).json({ success: false, errors: [{ msg: "Server error" }] });
   }
 };
 
@@ -118,106 +148,35 @@ const getHostel = async (req, res) => {
       return res.status(400).json({ success, errors: errors.array() });
     }
 
+    const organizationId = req.organizationId;
     const { id } = req.body;
 
-    let admin = await Admin.findById(id);
+    // Find admin in THIS organization
+    let admin = await Admin.findOne({ organizationId, _id: id });
 
     if (!admin) {
       return res
         .status(400)
-        .json({ success, errors: [{ msg: "Admin does not exists" }] });
+        .json({ success, errors: [{ msg: "Admin does not exist in your organization" }] });
     }
 
-    let hostel = await Hostel.findById(admin.hostel);
+    // Find hostel in THIS organization
+    let hostel = await Hostel.findOne({ organizationId, _id: admin.hostel });
+
+    if (!hostel) {
+      return res
+        .status(400)
+        .json({ success, errors: [{ msg: "Hostel not found" }] });
+    }
+
     success = true;
     res.json({ success, hostel });
   } catch (error) {
+    console.error("Get Hostel Error:", error);
     res.status(500).send("Server error");
   }
 };
 
-// const getAdmin = async (req, res) => {
-//     let success = false;
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//         return res.status(400).json({success, errors: errors.array()});
-//     }
-//     try {
-//         const {isAdmin} = req.body;
-//         if (!isAdmin) {
-//             return res.status(401).json({success, errors: [{msg: 'Not an Admin, authorization denied'}]});
-//         }
-//         const {token} = req.body;
-//         if (!token) {
-//             return res.status(401).json({success, errors: [{msg: 'No token, authorization denied'}]});
-//         }
-
-//         const decoded = verifyToken(token);
-
-//         if (!decoded) {
-//             return res.status(401).json({success, errors: [{msg: 'Token is not valid'}]});
-//         }
-
-//         let admin = await Admin.findOne({user:decoded.userId}).select('-password');
-
-//         if (!admin) {
-//             return res.status(401).json({success, errors: [{msg: 'Token is not valid'}]});
-//         }
-
-//         success = true;
-//         res.json({success, admin});
-//     } catch (error) {
-//         res.status(500).send('Server error');
-//     }
-// }
-// const getAdmin = async (req, res) => {
-//   let success = false;
-//   try {
-//     const { token } = req.body;
-
-//     if (!token) {
-//       return res.status(401).json({
-//         success,
-//         errors: [{ msg: "No token, authorization denied" }],
-//       });
-//     }
-
-//     const decoded = verifyToken(token);
-
-//     if (!decoded) {
-//       return res.status(401).json({
-//         success,
-//         errors: [{ msg: "Invalid token" }],
-//       });
-//     }
-
-//     // Find user by id
-//     const user = await User.findById(decoded.userId);
-
-//     if (!user || !user.isAdmin) {
-//       return res.status(401).json({
-//         success,
-//         errors: [{ msg: "Admin user not found or not an admin" }],
-//       });
-//     }
-
-//     // Find admin profile
-//     const admin = await Admin.findOne({ user: user._id }).select("-password");
-
-//     if (!admin) {
-//       return res.status(401).json({
-//         success,
-//         errors: [{ msg: "Admin profile not found" }],
-//       });
-//     }
-
-//     success = true;
-//     res.json({ success, admin });
-//   } catch (error) {
-//     console.error(error.message);
-//     res.status(500).send("Server error");
-//   }
-// };
 const getAdmin = async (req, res) => {
   let success = false;
   try {
@@ -240,7 +199,13 @@ const getAdmin = async (req, res) => {
       });
     }
 
-    const user = await User.findById(decoded.userId);
+    const organizationId = decoded.organizationId;
+
+    // Find user in THIS organization
+    const user = await User.findOne({
+      _id: decoded.userId,
+      organizationId
+    });
 
     if (!user || !user.isAdmin) {
       return res.status(401).json({
@@ -249,7 +214,11 @@ const getAdmin = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findOne({ user: user._id }).select("-password");
+    // Find admin profile in THIS organization
+    const admin = await Admin.findOne({
+      organizationId,
+      user: user._id
+    }).select("-password");
 
     if (!admin) {
       return res.status(401).json({
@@ -261,7 +230,7 @@ const getAdmin = async (req, res) => {
     success = true;
     res.json({ success, admin });
   } catch (error) {
-    console.error(error.message);
+    console.error("Get Admin Error:", error.message);
     res.status(500).send("Server error");
   }
 };
@@ -274,25 +243,31 @@ const deleteAdmin = async (req, res) => {
       return res.status(400).json({ success, errors: errors.array() });
     }
 
+    const organizationId = req.organizationId;
     const { email } = req.body;
 
-    let admin = await Admin.findOne({ email });
+    // Find admin in THIS organization only
+    let admin = await Admin.findOne({ organizationId, email });
 
     if (!admin) {
       return res
         .status(400)
-        .json({ success, errors: [{ msg: "Admin does not exists" }] });
+        .json({ success, errors: [{ msg: "Admin does not exist in your organization" }] });
     }
 
-    const user = await User.findById(admin.user);
+    // Find and delete associated user
+    const user = await User.findOne({ _id: admin.user, organizationId });
 
-    await User.deleteOne(user);
+    if (user) {
+      await User.deleteOne({ _id: user._id });
+    }
 
-    await Admin.deleteOne(admin);
+    await Admin.deleteOne({ _id: admin._id });
 
     success = true;
-    res.json({ success, msg: "Admin deleted" });
+    res.json({ success, msg: "Admin deleted successfully" });
   } catch (error) {
+    console.error("Delete Admin Error:", error);
     res.status(500).send("Server error");
   }
 };

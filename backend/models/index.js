@@ -1,3 +1,4 @@
+const Organization = require('./Organization');
 const Admin = require('./Admin');
 const Hostel = require('./Hostel');
 const Student = require('./Student');
@@ -10,6 +11,7 @@ const Invoice = require('./Invoice');
 const Request = require('./Request');
 
 module.exports = {
+    Organization,
     Admin,
     Hostel,
     Student,

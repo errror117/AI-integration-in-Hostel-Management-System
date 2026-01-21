@@ -4,8 +4,10 @@ import { Doughnut } from "react-chartjs-2";
 import "chart.js/auto"; // !IMPORTANT
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useSocket } from "../../../context/SocketContext";
 
 function Mess() {
+  const socket = useSocket();
   let requestMessOff = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -25,7 +27,7 @@ function Mess() {
 
     let result = await response.json();
     if (result.success) {
-      setRequests(requests+1);
+      setRequests(requests + 1);
       setLeaveDate("");
       setReturnDate("");
       toast.success('Mess Off Requested Succesfully!', {
@@ -116,6 +118,25 @@ function Mess() {
     setLoading(false);
   }, [requests]);
 
+  // Socket listener for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+    const student = JSON.parse(localStorage.getItem("student"));
+    if (!student?._id) return;
+
+    socket.on('messoff:updated', (updated) => {
+      if (updated.student?._id === student._id || updated.student === student._id) {
+        // Refresh the data
+        setRequests(prev => prev); // Trigger re-fetch
+        toast.info(`🍽 Mess-off ${updated.status}!`, { autoClose: 2000 });
+      }
+    });
+
+    return () => {
+      socket.off('messoff:updated');
+    };
+  }, [socket]);
+
   const labels = ["Mess Off", "Requested Mess Off", "Mess Attended"];
   const loader = (
     <svg
@@ -137,7 +158,7 @@ function Mess() {
   );
 
   return (
-    
+
     <div className="w-full h-screen gap-10 flex flex-col items-center justify-center max-h-screen overflow-y-auto pt-[500px] sm:pt-96 md:pt-96 lg:pt-40">
       <h1 className="text-white font-bold text-5xl">Mess Off</h1>
       <ul className="flex gap-5 text-white text-xl px-5 sm:p-0 text-center">
@@ -154,7 +175,7 @@ function Mess() {
               datasets: [
                 {
                   label: "Mess",
-                  data: [Messoff, requests, daysofmonthtilltoday-Messoff],
+                  data: [Messoff, requests, daysofmonthtilltoday - Messoff],
                   backgroundColor: ["#F26916", "#EAB308", "#1D4ED8"],
                   barThickness: 20,
                   borderRadius: 0,
@@ -200,22 +221,22 @@ function Mess() {
               {requestsList.length === 0
                 ? "No requests Sent"
                 : requestsList.map((req) => (
-                    <li className="py-3 sm:py-4" key={req._id}>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate text-white">
-                            {req.status.toUpperCase()}
-                          </p>
-                          <p className="text-sm truncate text-gray-400">
+                  <li className="py-3 sm:py-4" key={req._id}>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate text-white">
+                          {req.status.toUpperCase()}
+                        </p>
+                        <p className="text-sm truncate text-gray-400">
                           {new Date(req.leaving_date).toDateString().slice(4, 10)} to {new Date(req.return_date).toDateString().slice(4, 10)}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-center text-base font-semibold text-white">
-                        {new Date(req.request_date).toDateString().slice(4,10)}
-                        </div>
+                        </p>
                       </div>
-                    </li>
-                  ))}
+                      <div className="flex flex-col items-center text-base font-semibold text-white">
+                        {new Date(req.request_date).toDateString().slice(4, 10)}
+                      </div>
+                    </div>
+                  </li>
+                ))}
             </ul>
           </div>
         </div>

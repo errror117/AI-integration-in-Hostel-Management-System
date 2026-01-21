@@ -1,118 +1,240 @@
 const { validationResult } = require('express-validator');
-const { Invoice, MessOff, Student } = require('../models');
+const { Invoice, MessOff, Student, Hostel } = require('../models');
 const { Mess_bill_per_day } = require('../constants/mess');
+const { isValidObjectId, checkRecordExists, errorResponse, successResponse } = require('../utils/validators');
 
-// @route   Generate api/invoice/generate
-// @desc    Generate invoice
-// @access  Public
+// @route   POST api/invoice/generate
+// @desc    Generate invoices for hostel (within organization)
+// @access  Protected (Admin)
 exports.generateInvoices = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array(), success });
     }
+
+    const organizationId = req.organizationId;
     const { hostel } = req.body;
-    const students = await Student.find({ hostel })
-    const invoices = await Invoice.find({ student: { $in: students }, date: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } })
-    if (invoices.length === students.length) {
-        return res.status(400).json({ errors: 'Invoices already generated', success });
+
+    // Validate hostel ObjectId
+    if (!isValidObjectId(hostel)) {
+        return res.status(400).json(errorResponse(false, 'Invalid hostel ID format'));
     }
 
-    // get days in previous month
-    let daysinlastmonth = new Date(new Date().getFullYear(), new Date().getMonth(), 0).getDate();
+    // Check if hostel exists in this organization
+    const hostelCheck = await checkRecordExists(Hostel, hostel, organizationId);
+    if (!hostelCheck.exists) {
+        return res.status(404).json(errorResponse(false, 'Hostel not found in organization', null, 404));
+    }
 
-    let amount = Mess_bill_per_day * daysinlastmonth;
-    count = 0;
-    students.map(async (student) => {
-        let messoff = await MessOff.find({ student: student });
-        if (messoff) {
-            messoff.map((messoffone) => {
-                if (messoffone.status === 'approved' && messoffone.return_date.getMonth() + 1 === new Date().getMonth()) {
-                    let leaving_date = messoffone.leaving_date;
-                    let return_date = messoffone.return_date;
-                    let number_of_days = (return_date - leaving_date) / (1000 * 60 * 60 * 24);
-                    amount -= Mess_bill_per_day * number_of_days;
+    try {
+        // Get students from THIS organization and hostel
+        const students = await Student.find({ organizationId, hostel }).lean();
+
+        if (students.length === 0) {
+            return res.status(400).json({ success, errors: 'No students found in this hostel' });
+        }
+
+        const studentIds = students.map(s => s._id);
+
+        // Calculate date ranges once
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        const daysInLastMonth = lastMonthEnd.getDate();
+        const baseAmount = Mess_bill_per_day * daysInLastMonth;
+
+        // OPTIMIZED: Single query to get ALL existing invoices
+        const existingInvoices = await Invoice.find({
+            organizationId,
+            student: { $in: studentIds },
+            date: { $gte: monthStart }
+        }).select('student').lean();
+
+        // Create Set for O(1) lookup
+        const existingInvoiceSet = new Set(
+            existingInvoices.map(inv => inv.student.toString())
+        );
+
+        // Check if all students already have invoices
+        if (existingInvoices.length >= students.length) {
+            return res.status(400).json({ success, errors: 'Invoices already generated for this month' });
+        }
+
+        // OPTIMIZED: Single query to get ALL mess-offs at once
+        const allMessOffs = await MessOff.find({
+            organizationId,
+            student: { $in: studentIds },
+            status: { $regex: /^approved$/i },
+            leaving_date: { $gte: lastMonthStart },
+            return_date: { $lte: lastMonthEnd }
+        }).lean();
+
+        // Group mess-offs by student (O(n) in-memory operation)
+        const messOffsByStudent = allMessOffs.reduce((acc, messOff) => {
+            const studentId = messOff.student.toString();
+            if (!acc[studentId]) acc[studentId] = [];
+            acc[studentId].push(messOff);
+            return acc;
+        }, {});
+
+        // Calculate invoices for students without existing ones
+        const invoicesToCreate = students
+            .filter(student => !existingInvoiceSet.has(student._id.toString()))
+            .map(student => {
+                let amount = baseAmount;
+                const studentMessOffs = messOffsByStudent[student._id.toString()] || [];
+
+                // Calculate deductions
+                studentMessOffs.forEach(messOff => {
+                    const leavingDate = new Date(messOff.leaving_date);
+                    const returnDate = new Date(messOff.return_date);
+                    const numberOfDays = Math.ceil((returnDate - leavingDate) / (1000 * 60 * 60 * 24));
+                    amount -= Mess_bill_per_day * numberOfDays;
+                });
+
+                return {
+                    organizationId,
+                    student: student._id,
+                    title: `Mess Fee - ${now.toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+                    amount: Math.max(amount, 0),
+                    status: 'pending'
+                };
+            });
+
+        let count = 0;
+        const errors_list = [];
+
+        // OPTIMIZED: Batch insert all invoices at once
+        if (invoicesToCreate.length > 0) {
+            try {
+                const result = await Invoice.insertMany(invoicesToCreate, { ordered: false });
+                count = result.length;
+            } catch (err) {
+                // Handle partial success in bulk insert
+                if (err.insertedDocs) {
+                    count = err.insertedDocs.length;
+                    errors_list.push(`Some invoices failed: ${err.message}`);
+                } else {
+                    errors_list.push(`Invoice creation failed: ${err.message}`);
                 }
-            });
+            }
         }
 
-        try {
-            let invoice = new Invoice({
-                student,
-                amount
-            });
-            await invoice.save();
-            count++;
+        if (count > 0) {
+            success = true;
+            req.app.get('io').to(`org_${organizationId}`).emit('invoice:generated', { hostel, count });
         }
-        catch (err) {
-            console.error(err.message);
-            res.status(500).send('Server error');
-        }
-    });
-    success = true;
-    res.status(200).json({ success, count });
+
+        res.status(200).json({
+            success,
+            count,
+            message: `Generated ${count} invoices successfully`,
+            errors: errors_list.length > 0 ? errors_list : undefined
+        });
+
+    } catch (err) {
+        console.error('Generate Invoices Error:', err.message);
+        res.status(500).json({ success, errors: 'Server error' });
+    }
 }
 
-// @route   GET api/invoice/getbyid
-// @desc    Get all invoices
-// @access  Public
+// @route   GET api/invoice/by-hostel
+// @desc    Get all invoices by hostel (within organization)
+// @access  Protected
 exports.getInvoicesbyid = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array(), success });
     }
+
+    const organizationId = req.organizationId;
     const { hostel } = req.body;
-    let student = await Student.find({ hostel: hostel });
+
     try {
-        let invoices = await Invoice.find({ student: student }).populate('student', ['name', 'room_no', 'cms_id']);
+        const students = await Student.find({ organizationId, hostel });
+        const invoices = await Invoice.find({
+            organizationId,
+            student: { $in: students }
+        }).populate('student', ['name', 'room_no', 'cms_id']);
+
         success = true;
-        res.status(200).json({ success, invoices });
+        res.status(200).json({ success, invoices, count: invoices.length });
     }
     catch (err) {
-        console.error(err.message);
+        console.error('Get Invoices by Hostel Error:', err.message);
         res.status(500).send('Server error');
     }
 }
 
-// @route   GET api/invoice/student
-// @desc    Get all invoices
-// @access  Public
+// @route   GET api/invoice/by-student
+// @desc    Get all invoices for student (within organization)
+// @access  Protected
 exports.getInvoices = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array(), success });
     }
+
+    const organizationId = req.organizationId;
     const { student } = req.body;
+
     try {
-        let invoices = await Invoice.find({ student: student });
+        const invoices = await Invoice.find({ organizationId, student }).sort({ date: -1 });
         success = true;
-        res.status(200).json({ success, invoices });
+        res.status(200).json({ success, invoices, count: invoices.length });
     }
     catch (err) {
-        console.error(err.message);
+        console.error('Get Student Invoices Error:', err.message);
         res.status(500).send('Server error');
     }
 }
 
-// @route   GET api/invoice/update
-// @desc    Update invoice
-// @access  Public
+// @route   PUT api/invoice/update
+// @desc    Update invoice status
+// @access  Protected
 exports.updateInvoice = async (req, res) => {
     let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array(), success });
     }
+
+    const organizationId = req.organizationId;
     const { student, status } = req.body;
+
     try {
-        let invoice = await Invoice.findOneAndUpdate({ student: student, date: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } }, { status: status });
+        const invoice = await Invoice.findOneAndUpdate(
+            {
+                organizationId,
+                student,
+                date: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
+            },
+            { status },
+            { new: true }
+        );
+
+        if (!invoice) {
+            return res.status(404).json({ success, error: 'Invoice not found' });
+        }
+
+        req.app.get('io').to(`org_${organizationId}`).emit('invoice:updated', invoice);
+
         success = true;
         res.status(200).json({ success, invoice });
     }
     catch (err) {
-        console.error(err.message);
+        console.error('Update Invoice Error:', err.message);
         res.status(500).send('Server error');
     }
 }
+
+module.exports = {
+    generateInvoices: exports.generateInvoices,
+    getInvoicesbyid: exports.getInvoicesbyid,
+    getInvoices: exports.getInvoices,
+    updateInvoice: exports.updateInvoice
+};

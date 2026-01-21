@@ -12,8 +12,10 @@ import {
 } from "recharts";
 import { getAllStudents } from "../../../../utils";
 import { toast } from "react-toastify";
+import { useSocket } from "../../../../context/SocketContext";
 
 function Home() {
+  const socket = useSocket();
   const admin = JSON.parse(localStorage.getItem("admin"));
   const hostel = JSON.parse(localStorage.getItem("hostel"));
   const [noOfStudents, setNoOfStudents] = useState(0);
@@ -108,15 +110,15 @@ function Home() {
   function transformApiData(apiData) {
     // Extract complaints from the API data
     const complaintss = apiData || [];
-  
+
     // Create a Map to store complaints grouped by date
     const complaintMap = new Map();
-  
+
     // Process each complaint
     complaintss.forEach(complaint => {
       // Parse the date string
       const date = new Date(complaint.date);
-      
+
       const formattedDate = date.toLocaleDateString('en-US', {
         timeZone: 'UTC',
         year: 'numeric',
@@ -127,13 +129,13 @@ function Home() {
       // Increment the count for this date
       complaintMap.set(formattedDate, (complaintMap.get(formattedDate) || 0) + 1);
     });
-  
+
     // Convert the Map to an array of objects
     const transformedData = Array.from(complaintMap.entries()).map(([date, count]) => ({
       name: date,
       DailyComplaints: count
     }));
-  
+
     return transformedData;
   }
 
@@ -143,6 +145,57 @@ function Home() {
     getComplaints();
     getSuggestions();
   }, []);
+
+  // Real-time socket listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    // New complaint
+    socket.on('complaint:new', (newComplaint) => {
+      setComplaints(prev => [newComplaint, ...prev]);
+      toast.info('📢 New complaint received!', { autoClose: 2000 });
+    });
+
+    // New suggestion
+    socket.on('suggestion:new', (newSuggestion) => {
+      if (newSuggestion.status === 'pending') {
+        setSuggestions(prev => [newSuggestion, ...prev]);
+      }
+      toast.info('💡 New suggestion received!', { autoClose: 2000 });
+    });
+
+    // Suggestion updated
+    socket.on('suggestion:updated', (updated) => {
+      setSuggestions(prev => prev.filter(s => s._id !== updated._id || updated.status === 'pending'));
+    });
+
+    // New mess-off request
+    socket.on('messoff:new', (newReq) => {
+      const formatted = {
+        ...newReq,
+        id: newReq._id,
+        from: new Date(newReq.leaving_date).toDateString().slice(4, 10),
+        to: new Date(newReq.return_date).toDateString().slice(4, 10),
+        title: `${newReq.student?.name} [ Room: ${newReq.student?.room_no}]`,
+        desc: `${new Date(newReq.leaving_date).toDateString().slice(4, 10)} to ${new Date(newReq.return_date).toDateString().slice(4, 10)}`
+      };
+      setMessReqs(prev => [formatted, ...prev]);
+      toast.info('🍽️ New mess-off request!', { autoClose: 2000 });
+    });
+
+    // Mess-off updated
+    socket.on('messoff:updated', (updated) => {
+      setMessReqs(prev => prev.filter(m => m._id !== updated._id));
+    });
+
+    return () => {
+      socket.off('complaint:new');
+      socket.off('suggestion:new');
+      socket.off('suggestion:updated');
+      socket.off('messoff:new');
+      socket.off('messoff:updated');
+    };
+  }, [socket]);
 
   const [messReqs, setMessReqs] = useState([]);
 

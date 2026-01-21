@@ -3,7 +3,10 @@ import { Line } from "react-chartjs-2";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { useSocket } from "../../../context/SocketContext";
+
 function Complaints() {
+  const socket = useSocket();
   const getComplaints = async () => {
     // const hostel = JSON.parse(localStorage.getItem("hostel"))._id ;
     const hostel = JSON.parse(localStorage.getItem("hostel") || "{}")._id || "";
@@ -99,6 +102,35 @@ function Complaints() {
   const [graphData, setGraphData] = useState([0, 0, 0, 0, 0, 0, 0]);
 
   useEffect(() => {
+    if (!socket) return;
+
+    socket.on('complaint:new', (newComplaint) => {
+      const formatted = {
+        id: newComplaint._id,
+        type: newComplaint.type,
+        title: newComplaint.title,
+        desc: newComplaint.description,
+        student: newComplaint.student?.name || "Student",
+        room: newComplaint.student?.room_no || "111",
+        status: newComplaint.status,
+        date: new Date(newComplaint.date).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+      };
+
+      setAllComplaints((prev) => [formatted, ...prev]);
+      setComplaints((prev) => [formatted, ...prev]);
+      toast.info(`New Complaint from ${formatted.student}!`);
+    });
+
+    return () => {
+      socket.off('complaint:new');
+    };
+  }, [socket]);
+
+  useEffect(() => {
     getComplaints();
     const dates = [
       new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toLocaleDateString(
@@ -139,6 +171,11 @@ function Complaints() {
       )
     );
   }, [
+    // Removed specific length dependencies to prevent infinite loops if logic is flawed
+    // Keeping it simple for now or relying on effect to run on mount + specific updates if needed
+    // But for this refactor, I'll rely on allComplaints itself if I need to re-calc graph
+    // However, graph calc is inside this effect. Ideally should be separate.
+    // Minimizing changes to existing logic:
     allComplaints.length,
     unsolvedComplaints.length,
     resolvedComplaints.length,
@@ -208,44 +245,47 @@ function Complaints() {
             {unsolvedComplaints.length === 0
               ? "No new complaints!"
               : unsolvedComplaints.map((complaint) => (
-                  <li
-                    className="py-3 sm:py-4 px-5 rounded hover:bg-neutral-700 hover:scale-105 transition-all"
-                    key={complaint.student}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0 text-white">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2}
-                          stroke="currentColor"
-                          className="w-7 h-7"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate text-white">
-                          {complaint.title}
-                        </p>
-                        <p className="text-sm truncate text-gray-400">
-                          {complaint.desc}
-                        </p>
-                      </div>
-                      <button
-                        className="hover:underline hover:text-green-600"
-                        onClick={() => dismissComplaint(complaint.id)}
+                <li
+                  className="py-3 sm:py-4 px-5 rounded hover:bg-neutral-700 hover:scale-105 transition-all"
+                  key={complaint.id}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0 text-white">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-7 h-7"
                       >
-                        Solved
-                      </button>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                        />
+                      </svg>
                     </div>
-                  </li>
-                ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate text-white">
+                        {complaint.title}
+                      </p>
+                      <p className="text-xs truncate text-blue-400">
+                        👤 {complaint.student} | 🚪 Room {complaint.room}
+                      </p>
+                      <p className="text-sm truncate text-gray-400">
+                        {complaint.desc}
+                      </p>
+                    </div>
+                    <button
+                      className="hover:underline hover:text-green-600"
+                      onClick={() => dismissComplaint(complaint.id)}
+                    >
+                      Solved
+                    </button>
+                  </div>
+                </li>
+              ))}
           </ul>
         </div>
       </div>

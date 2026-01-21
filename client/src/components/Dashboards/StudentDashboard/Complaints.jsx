@@ -264,18 +264,27 @@
 // }
 
 // export default Complaints;
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Input } from "../../LandingSite/AuthPage/Input";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import { useSocket } from "../../../context/SocketContext";
+import { uploadComplaintAttachments } from "../../../utils/uploadService";
+
 function Complaints() {
+  const socket = useSocket();
   const [loading, setLoading] = useState(false);
   const [student, setStudent] = useState(null);
   const [regComplaints, setRegComplaints] = useState([]);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [type, setType] = useState("Electric");
+
+  // File upload state
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [filePreviews, setFilePreviews] = useState([]);
+  const fileInputRef = useRef(null);
 
   const types = ["Electric", "Furniture", "Cleaning", "Others"];
 
@@ -289,6 +298,22 @@ function Complaints() {
     setStudent(studentData);
     fetchComplaints(studentData._id);
   }, []);
+
+  useEffect(() => {
+    if (!socket || !student) return;
+
+    socket.on('complaint:updated', (updatedComplaint) => {
+      // Update local state if the complaint belongs to this student
+      setRegComplaints(prev => prev.map(c =>
+        c._id === updatedComplaint._id ? { ...c, status: updatedComplaint.status } : c
+      ));
+      toast.info(`Complaint status updated: ${updatedComplaint.status}`, { theme: "dark" });
+    });
+
+    return () => {
+      socket.off('complaint:updated');
+    };
+  }, [socket, student]);
 
   const fetchComplaints = async (studentId) => {
     try {
@@ -321,15 +346,26 @@ function Complaints() {
     if (!student || !student._id) return;
 
     setLoading(true);
-    const complaint = {
-      student: student._id,
-      hostel: student.hostel,
-      title,
-      description: desc,
-      type,
-    };
 
     try {
+      // Step 1: Upload files if any are selected
+      let attachmentUrls = [];
+      if (selectedFiles.length > 0) {
+        toast.info('Uploading attachments...', { theme: 'dark', autoClose: 1000 });
+        const uploadResponse = await uploadComplaintAttachments(selectedFiles);
+        attachmentUrls = uploadResponse.files || [];
+      }
+
+      // Step 2: Register complaint with file URLs
+      const complaint = {
+        student: student._id,
+        hostel: student.hostel,
+        title,
+        description: desc,
+        type,
+        attachments: attachmentUrls // Include uploaded file URLs
+      };
+
       const res = await fetch("http://localhost:3000/api/complaint/register", {
         method: "POST",
         headers: {
@@ -344,15 +380,53 @@ function Complaints() {
         setTitle("");
         setDesc("");
         setType("Electric");
-        fetchComplaints(student._id); // refresh list
+        setSelectedFiles([]);
+        setFilePreviews([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        fetchComplaints(student._id);  // refresh list
       } else {
         toast.error(data.errors || "Something went wrong.", { theme: "dark" });
       }
     } catch (error) {
-      toast.error("Error registering complaint", { theme: "dark" });
+      console.error('Error:', error);
+      toast.error(error.message || "Error registering complaint", { theme: "dark" });
     }
 
     setLoading(false);
+  };
+
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    // Validate number of files (max 5)
+    if (files.length > 5) {
+      toast.error('Maximum 5 files allowed', { theme: 'dark' });
+      return;
+    }
+
+    // Validate file sizes (max 5MB each)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+
+    if (oversizedFiles.length > 0) {
+      toast.error('Each file must be less than 5MB', { theme: 'dark' });
+      return;
+    }
+
+    setSelectedFiles(files);
+
+    // Generate previews for images
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setFilePreviews(newPreviews);
+  };
+
+  // Remove a file from selection
+  const removeFile = (index) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    const newPreviews = filePreviews.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    setFilePreviews(newPreviews);
   };
 
   const complaintTitle = {
@@ -424,6 +498,50 @@ function Complaints() {
               onChange={(e) => setDesc(e.target.value)}
               value={desc}
             ></textarea>
+
+            {/* File Upload Section */}
+            <div className="mt-4">
+              <label className="block mb-2 text-sm font-medium text-white">
+                📎 Attach Images (Optional)
+              </label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-400 border border-gray-600 rounded-lg cursor-pointer bg-gray-700 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                disabled={loading}
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Max 5 images, 5MB each
+              </p>
+
+              {/* File Previews */}
+              {selectedFiles.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {filePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-20 object-cover rounded border-2 border-gray-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                      <p className="text-xs text-gray-400 mt-1 truncate">
+                        {selectedFiles[index].name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               type="submit"
               className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 text-lg rounded-lg px-5 py-2.5 mt-5 text-center"

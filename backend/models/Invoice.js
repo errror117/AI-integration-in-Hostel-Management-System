@@ -2,26 +2,39 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const InvoiceSchema = new Schema({
-    student:{
-        type:Schema.Types.ObjectId,
-        ref:'student'
+    organizationId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true,
+        index: true
     },
-    title:{
-        type:String,
-        default:'Mess Fee'
+
+    student: {
+        type: Schema.Types.ObjectId,
+        ref: 'Student'
     },
-    amount:{
-        type:Number,
-        required:true
+    title: {
+        type: String,
+        default: 'Mess Fee'
     },
-    status:{
-        type:String,
-        default:'pending'
+    amount: {
+        type: Number,
+        required: true
     },
-    date:{
-        type:Date,
-        default:Date.now
+    status: {
+        type: String,
+        default: 'pending'
+    },
+    date: {
+        type: Date,
+        default: Date.now
     }
+}, {
+    timestamps: true
 })
 
-module.exports = Invoice = mongoose.model('invoice',InvoiceSchema);
+InvoiceSchema.index({ organizationId: 1, student: 1 });
+InvoiceSchema.index({ organizationId: 1, status: 1 });
+InvoiceSchema.index({ organizationId: 1, date: -1 });
+
+module.exports = Invoice = mongoose.model('Invoice', InvoiceSchema);

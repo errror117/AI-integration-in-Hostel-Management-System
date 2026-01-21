@@ -1,0 +1,275 @@
+[
+    {
+        "question": "What are the hostel timings?",
+        "answer": "The hostel gate remains open from 6:00 AM to 10:00 PM. Entry after 10:00 PM requires special permission from the warden.",
+        "category": "hostel_rules",
+        "keywords": [
+            "timings",
+            "gate",
+            "hours",
+            "entry",
+            "exit"
+        ]
+    },
+    {
+        "question": "When is the mess open for meals?",
+        "answer": "Mess timings: Breakfast (7:30 AM - 9:30 AM), Lunch (12:30 PM - 2:30 PM), Dinner (7:30 PM - 9:30 PM).",
+        "category": "mess_info",
+        "keywords": [
+            "mess",
+            "timings",
+            "breakfast",
+            "lunch",
+            "dinner",
+            "food"
+        ]
+    },
+    {
+        "question": "How do I register a complaint?",
+        "answer": "You can register complaints through: 1) This chatbot (instant), 2) Complaint register at warden's office, or 3) Student portal. Our AI prioritizes urgent issues automatically.",
+        "category": "complaints",
+        "keywords": [
+            "complaint",
+            "register",
+            "issue",
+            "problem"
+        ]
+    },
+    {
+        "question": "What is the monthly hostel fee?",
+        "answer": "Hostel fees vary by room type: Single occupancy: ₹5000/month, Double: ₹3500/month, Triple: ₹3000/month. Mess fees are additional ₹2500/month.",
+        "category": "fees",
+        "keywords": [
+            "fees",
+            "cost",
+            "charges",
+            "payment",
+            "bill"
+        ]
+    },
+    {
+        "question": "How do I request a room change?",
+        "answer": "Submit a room change request through the  student portal or visit the hostel office. Valid reasons include medical issues, academic requirements, or incompatibility with roommates.",
+        "category": "facilities",
+        "keywords": [
+            "room change",
+            "transfer",
+            "shift"
+        ]
+    },
+    {
+        "question": "What WiFi speed is available?",
+        "answer": "The hostel provides 100 Mbps shared WiFi connection. Each student gets a unique login. For connectivity issues, contact the IT helpdesk or register a complaint.",
+        "category": "facilities",
+        "keywords": [
+            "wifi",
+            "internet",
+            "connection",
+            "speed"
+        ]
+    },
+    {
+        "question": "Can I get permission for late night entry?",
+        "answer": "Yes, you can request late-night permission through this chatbot or the warden's office. Provide a valid reason (family emergency, academic work, etc.). Emergency cases are auto-approved.",
+        "category": "permissions",
+        "keywords": [
+            "late night",
+            "permission",
+            "gate pass",
+            "entry"
+        ]
+    },
+    {
+        "question": "What items are not allowed in hostel rooms?",
+        "answer": "Prohibited items: Cooking appliances (except kettles), alcohol, illegal substances, pets, and high-power electrical devices. Violations may result in disciplinary action.",
+        "category": "hostel_rules",
+        "keywords": [
+            "prohibited",
+            "not allowed",
+            "banned",
+            "rules"
+        ]
+    },
+    {
+        "question": "How do I apply for mess-off?",
+        "answer": "Apply for mess-off at least 3 days in advance through the student portal or this chatbot. Minimum duration is 3 days. Fees will be adjusted accordingly.",
+        "category": "mess_info",
+        "keywords": [
+            "mess off",
+            "food leave",
+            "mess absence"
+        ]
+    },
+    {
+        "question": "What are quiet hours?",
+        "answer": "Quiet hours are from 11:00 PM to 6:00 AM. During this time, loud music, parties, and noise-creating activities are strictly prohibited to ensure everyone can study and rest.",
+        "category": "hostel_rules",
+        "keywords": [
+            "quiet hours",
+            "noise",
+            "silence",
+            "rules"
+        ]
+    },
+    {
+        "question": "Is laundry service available?",
+        "answer": "Yes, laundry service is available. Professional laundry: ₹200/month or self-service washing machines available on each floor at ₹20 per load.",
+        "category": "facilities",
+        "keywords": [
+            "laundry",
+            "washing",
+            "clothes"
+        ]
+    },
+    {
+        "question": "How do I report a maintenance issue?",
+        "answer": "Report maintenance issues immediately through this chatbot (recommended - AI prioritizes urgent issues), complaint register, or directly to maintenance staff. Emergency issues are handled within 24 hours.",
+        "category": "complaints",
+        "keywords": [
+            "maintenance",
+            "repair",
+            "broken",
+            "fix"
+        ]
+    },
+    {
+        "question": "Can visitors stay overnight?",
+        "answer": "Overnight guests are generally not permitted. For special cases (family emergencies), seek approval from the warden at least 48 hours in advance.",
+        "category": "hostel_rules",
+        "keywords": [
+            "visitors",
+            "guests",
+            "overnight",
+            "family"
+        ]
+    },
+    {
+        "question": "What security measures are in place?",
+        "answer": "Security features include: 24/7 security guards, CCTV cameras, biometric entry system, visitor register, and regular night patrols. Emergency contact: Security Office ext. 100",
+        "category": "facilities",
+        "keywords": [
+            "security",
+            "safety",
+            "cctv",
+            "guards"
+        ]
+    },
+    {
+        "question": "How is room allocation done?",
+        "answer": "Room allocation is based on: admission date, course/year, and preferences. First-year students typically get triple sharing, senior students may get double or single rooms based on availability.",
+        "category": "general",
+        "keywords": [
+            "room allocation",
+            "allotment",
+            "assignment"
+        ]
+    },
+    {
+        "question": "What medical facilities are available?",
+        "answer": "On-campus medical room with a nurse available 24/7. Doctor visits twice weekly. For emergencies, arrangements for nearby hospital transport are available. Keep your medical insurance details updated.",
+        "category": "facilities",
+        "keywords": [
+            "medical",
+            "doctor",
+            "health",
+            "hospital"
+        ]
+    },
+    {
+        "question": "Are there study rooms?",
+        "answer": "Yes, dedicated study rooms on each floor. Common study hall on ground floor with extended hours (6 AM - 12 AM). AC study rooms require booking through the student portal.",
+        "category": "facilities",
+        "keywords": [
+            "study room",
+            "library",
+            "reading room"
+        ]
+    },
+    {
+        "question": "What is the hostel's drinking water facility?",
+        "answer": "RO purified drinking water available on each floor. Water coolers in common areas. Regular water quality tests conducted. Report any water quality issues immediately.",
+        "category": "facilities",
+        "keywords": [
+            "water",
+            "drinking water",
+            "ro",
+            "purifier"
+        ]
+    },
+    {
+        "question": "How do I extend my hostel stay during vacations?",
+        "answer": "Submit vacation stay request 15 days before holidays. Additional charges: ₹100/day including mess. Available only for valid reasons (exams, internships, research work).",
+        "category": "general",
+        "keywords": [
+            "vacation",
+            "extend",
+            "stay",
+            "holidays"
+        ]
+    },
+    {
+        "question": "What happens if I lose my room key?",
+        "answer": "Report lost keys immediately to the hostel office. Duplicate key: ₹200. If lock replacement required: ₹500. For security, locks are changed if keys are lost.",
+        "category": "general",
+        "keywords": [
+            "key",
+            "lost",
+            "duplicate",
+            "lock"
+        ]
+    },
+    {
+        "question": "Can I request a specific roommate?",
+        "answer": "Roommate preferences can be mentioned during admission/room change. We try to accommodate if both students request each other and rooms are available. Final decision with hostel administration.",
+        "category": "general",
+        "keywords": [
+            "roommate",
+            "room partner",
+            "preference"
+        ]
+    },
+    {
+        "question": "What are the electricity usage rules?",
+        "answer": "Basic electricity included in fees. Overuse (>100 units/month) charged extra. Power backup for lights and fans only. AC usage limited to 10 PM - 6 AM.",
+        "category": "hostel_rules",
+        "keywords": [
+            "electricity",
+            "power",
+            "ac",
+            "usage"
+        ]
+    },
+    {
+        "question": "Is there a gym facility?",
+        "answer": "Yes, hostel gym on ground floor with cardio and strength training equipment. Timings: 6 AM - 10 PM. Free for all residents. Fitness instructor available 6-8 AM and 6-8 PM.",
+        "category": "facilities",
+        "keywords": [
+            "gym",
+            "fitness",
+            "exercise",
+            "workout"
+        ]
+    },
+    {
+        "question": "How do I check my mess menu?",
+        "answer": "Weekly mess menu posted on notice boards and student portal every Sunday. You can also ask me 'What's for lunch today?' and I'll tell you with crowd prediction!",
+        "category": "mess_info",
+        "keywords": [
+            "menu",
+            "mess menu",
+            "food",
+            "meals"
+        ]
+    },
+    {
+        "question": "What should I do in case of fire emergency?",
+        "answer": "EMERGENCY PROCEDURE: 1) Activate fire alarm, 2) Evacuate immediately using stairs (NOT elevators), 3) Assemble at designated safe zone, 4) Call emergency: ext. 911. Fire extinguishers on each floor.",
+        "category": "general",
+        "keywords": [
+            "fire",
+            "emergency",
+            "evacuation",
+            "safety"
+        ]
+    }
+]
