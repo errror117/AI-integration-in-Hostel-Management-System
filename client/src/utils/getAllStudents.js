@@ -1,6 +1,6 @@
 const getAllStudents = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
-    const result = await fetch(`${API_URL}/api/student/get-all-students", {
+    const result = await fetch(window.API_BASE_URL + "/api/student/get-all-students", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

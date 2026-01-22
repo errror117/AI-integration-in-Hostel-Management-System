@@ -11,7 +11,7 @@
 //   const getHostel = async () => {
 //     let admin = JSON.parse(localStorage.getItem("admin"));
 //     try {
-//       const res = await fetch(`${API_URL}/api/admin/get-hostel", {
+//       const res = await fetch(window.API_BASE_URL + "/api/admin/get-hostel", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json"
@@ -34,7 +34,7 @@
 //       password: pass,
 //     };
 
-//     let response = await fetch(`${API_URL}/api/auth/login", {
+//     let response = await fetch(window.API_BASE_URL + "/api/auth/login", {
 //       method: "POST",
 //       headers: {
 //         "Content-Type": "application/json",
@@ -46,7 +46,7 @@
 
 //     if (result.success) {
 //       localStorage.setItem("token", result.data.token);
-//       let admin = await fetch(`${API_URL}/api/admin/get-admin", {
+//       let admin = await fetch(window.API_BASE_URL + "/api/admin/get-admin", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -189,15 +189,13 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Loader } from "../../Dashboards/Common/Loader";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 export default function AdminSignIn() {
   let navigate = useNavigate();
 
   const getHostel = async () => {
     let admin = JSON.parse(localStorage.getItem("admin"));
     try {
-      const res = await fetch(`${API_URL}/api/admin/get-hostel`, {
+      const res = await fetch(window.API_BASE_URL + "/api/admin/get-hostel", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -220,7 +218,7 @@ export default function AdminSignIn() {
   //     password: pass,
   //   };
 
-  //   let response = await fetch(`${API_URL}/api/auth/login", {
+  //   let response = await fetch(window.API_BASE_URL + "/api/auth/login", {
   //     method: "POST",
   //     headers: {
   //       "Content-Type": "application/json",
@@ -234,7 +232,7 @@ export default function AdminSignIn() {
   //     localStorage.setItem("token", result.data.token);
 
   //     // ✅ FIXED PART: send token in Authorization header instead of body
-  //     let admin = await fetch(`${API_URL}/api/admin/get-admin", {
+  //     let admin = await fetch(window.API_BASE_URL + "/api/admin/get-admin", {
   //       method: "POST",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -282,7 +280,7 @@ export default function AdminSignIn() {
   //     password: pass,
   //   };
 
-  //   let response = await fetch(`${API_URL}/api/auth/login", {
+  //   let response = await fetch(window.API_BASE_URL + "/api/auth/login", {
   //     method: "POST",
   //     headers: {
   //       "Content-Type": "application/json",
@@ -296,7 +294,7 @@ export default function AdminSignIn() {
   //     localStorage.setItem("token", result.data.token);
 
   //     // send token in Authorization header
-  //     let admin = await fetch(`${API_URL}/api/admin/get-admin", {
+  //     let admin = await fetch(window.API_BASE_URL + "/api/admin/get-admin", {
   //       method: "POST",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -344,7 +342,7 @@ export default function AdminSignIn() {
       password: pass,
     };
 
-    let response = await fetch(`${API_URL}/api/auth/login`, {
+    let response = await fetch(window.API_BASE_URL + "/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -367,7 +365,7 @@ export default function AdminSignIn() {
       }
 
       // Regular admin - fetch admin profile
-      let admin = await fetch(`${API_URL}/api/admin/get-admin`, {
+      let admin = await fetch(window.API_BASE_URL + "/api/admin/get-admin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

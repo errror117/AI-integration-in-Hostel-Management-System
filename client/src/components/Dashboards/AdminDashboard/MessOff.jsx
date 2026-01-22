@@ -4,8 +4,6 @@ import "react-toastify/dist/ReactToastify.css";
 import LoadingBar from 'react-top-loading-bar'
 import { useSocket } from "../../../context/SocketContext";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 function MessOff() {
   const socket = useSocket();
   const [progress, setProgress] = useState(0);
@@ -19,7 +17,7 @@ function MessOff() {
     if (!hostel) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/messoff/list", {
+      const res = await fetch(window.API_BASE_URL + "/api/messoff/list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hostel: hostel._id }),
@@ -58,7 +56,7 @@ function MessOff() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/messoff/update", {
+      const res = await fetch(window.API_BASE_URL + "/api/messoff/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: action }),

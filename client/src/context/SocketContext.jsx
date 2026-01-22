@@ -4,8 +4,6 @@ import { io } from 'socket.io-client';
 
 const SocketContext = createContext();
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 export const useSocket = () => {
     return useContext(SocketContext);
 };
@@ -15,7 +13,7 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         // Initialize socket connection
-        const newSocket = io(SOCKET_URL, {
+        const newSocket = io(window.API_BASE_URL, {
             transports: ['websocket'],
             autoConnect: true,
             reconnection: true

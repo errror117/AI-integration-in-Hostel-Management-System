@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
   PieChart,
   Pie,
   Cell,
@@ -36,22 +34,22 @@ export default function Analytics() {
   const fetchAllData = async () => {
     try {
       // Fetch hostel stats
-      const statsRes = await fetch(`${API_URL}/api/student/stats");
+      const statsRes = await fetch(window.API_BASE_URL + "/api/student/stats");
       const statsData = await statsRes.json();
       if (statsData.success) setStats(statsData);
 
       // Fetch predictions
-      const predRes = await fetch(`${API_URL}/api/analytics/predictions");
+      const predRes = await fetch(window.API_BASE_URL + "/api/analytics/predictions");
       const predData = await predRes.json();
       if (predData.success) setPredictions(predData.data);
 
       // Fetch chatbot stats
-      const chatRes = await fetch(`${API_URL}/api/analytics/chatbot-stats");
+      const chatRes = await fetch(window.API_BASE_URL + "/api/analytics/chatbot-stats");
       const chatData = await chatRes.json();
       if (chatData.success) setChatStats(chatData.data);
 
       // Fetch mess predictions
-      const messRes = await fetch(`${API_URL}/api/analytics/mess-predictions");
+      const messRes = await fetch(window.API_BASE_URL + "/api/analytics/mess-predictions");
       const messData = await messRes.json();
       if (messData.success) setMessPredictions(messData.data);
 

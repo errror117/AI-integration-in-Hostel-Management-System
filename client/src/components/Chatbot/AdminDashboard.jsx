@@ -14,8 +14,6 @@ import {
 import { Line, Doughnut } from 'react-chartjs-2';
 import { ArrowDownTrayIcon, CpuChipIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -43,8 +41,8 @@ const AdminChatbotDashboard = () => {
         const headers = { "auth-token": token, "Content-Type": "application/json" };
         
         const [statsRes, logsRes] = await Promise.all([
-            fetch(`${API_URL}/api/chatbot/stats', { headers }),
-            fetch(`${API_URL}/api/chatbot/logs', { headers })
+            fetch(window.API_BASE_URL + '/api/chatbot/stats', { headers }),
+            fetch(window.API_BASE_URL + '/api/chatbot/logs', { headers })
         ]);
 
         const statsData = await statsRes.json();

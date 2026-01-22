@@ -7,7 +7,7 @@
 // function Suggestions() {
 //   const getSuggestions = async () => {
 //     const hostel = JSON.parse(localStorage.getItem("hostel"));
-//     const response = await fetch(`${API_URL}/api/suggestion/hostel", {
+//     const response = await fetch(window.API_BASE_URL + "/api/suggestion/hostel", {
 //       method: "POST",
 //       headers: {
 //         "Content-Type": "application/json",
@@ -32,7 +32,7 @@
 
 //   const updateSuggestion = async (id) => {
 //     setLoader(true);
-//     const response = await fetch(`${API_URL}/api/suggestion/update", {
+//     const response = await fetch(window.API_BASE_URL + "/api/suggestion/update", {
 //       method: "POST",
 //       headers: {
 //         "Content-Type": "application/json",
@@ -167,8 +167,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Loader } from "../../Dashboards/Common/Loader";
 import { useSocket } from "../../../context/SocketContext";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function Suggestions() {
   const socket = useSocket();

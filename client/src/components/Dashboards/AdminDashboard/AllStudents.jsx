@@ -4,13 +4,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 function AllStudents() {
   const navigate = useNavigate();
   const getCSV = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
-    const res = await fetch(`${API_URL}/api/student/csv", {
+    const res = await fetch(window.API_BASE_URL + "/api/student/csv", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -8,7 +8,7 @@
 //   const navigate = useNavigate();
 
 //   useEffect(() => {
-//     fetch(`${API_URL}/api/student/get-student/${id}`)
+//     fetch(`http://localhost:3000/api/student/get-student/${id}`)
 //       .then((res) => res.json())
 //       .then((data) => setStudent(data.student));
 //   }, [id]);
@@ -64,8 +64,6 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 export default function EditStudent() {
   const { id } = useParams(); // /edit-student/:id
   const navigate = useNavigate();
@@ -77,7 +75,7 @@ export default function EditStudent() {
   // ① If student is not passed via state, fetch it
   useEffect(() => {
     if (!student) {
-      fetch(`${API_URL}/api/student/get-student/${id}`)
+      fetch(`http://localhost:3000/api/student/get-student/${id}`)
         .then((res) => (res.ok ? res.json() : Promise.reject("404")))
         .then((data) => {
           setStudent(data);

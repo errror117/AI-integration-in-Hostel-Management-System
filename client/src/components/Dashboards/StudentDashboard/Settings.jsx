@@ -4,8 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 function Settings() {
   const navigate = useNavigate();
   const changePassword = async (e) => {
@@ -18,7 +16,7 @@ function Settings() {
       newPassword: pass,
     };
     
-    let result = await fetch(`${API_URL}/api/auth/change-password", {
+    let result = await fetch(window.API_BASE_URL + "/api/auth/change-password", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

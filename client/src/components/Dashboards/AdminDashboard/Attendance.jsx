@@ -5,12 +5,10 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingBar from 'react-top-loading-bar'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 function Attendance() {
   const getALL = async () => {
     setProgress(30);
-    const marked = await fetch(`${API_URL}/api/attendance/getHostelAttendance", {
+    const marked = await fetch(window.API_BASE_URL + "/api/attendance/getHostelAttendance", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,7 +55,7 @@ function Attendance() {
   const [markedStudents, setMarkedStudents] = useState([]);
 
   const markAttendance = async (id, isPresent) => {
-    const data = await fetch(`${API_URL}/api/attendance/mark`, {
+    const data = await fetch(`http://localhost:3000/api/attendance/mark`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -159,7 +157,7 @@ function Attendance() {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
 
     try {
-      const response = await fetch(`${API_URL}/api/attendance/markAll", {
+      const response = await fetch(window.API_BASE_URL + "/api/attendance/markAll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

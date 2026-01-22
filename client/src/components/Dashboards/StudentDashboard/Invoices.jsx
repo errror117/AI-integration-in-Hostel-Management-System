@@ -8,7 +8,7 @@
 
 //   useEffect(() => {
 //     let student = JSON.parse(localStorage.getItem("student"));
-//     fetch(`${API_URL}/api/invoice/student", {
+//     fetch(window.API_BASE_URL + "/api/invoice/student", {
 //       method: "POST",
 //       headers: {
 //         "Content-Type": "application/json",
@@ -140,8 +140,6 @@
 
 // export default Invoices;
 import { useState, useEffect } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function Invoices() {
   const [student, setStudent] = useState(null);

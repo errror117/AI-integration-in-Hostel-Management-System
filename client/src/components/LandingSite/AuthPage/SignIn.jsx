@@ -6,8 +6,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Loader } from "../../Dashboards/Common/Loader";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 export default function SignIn() {
   let navigate = useNavigate();
 
@@ -29,7 +27,7 @@ export default function SignIn() {
       password: pass,
     };
 
-    let response = await fetch(`${API_URL}/api/auth/login`, {
+    let response = await fetch(window.API_BASE_URL + "/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -41,7 +39,7 @@ export default function SignIn() {
 
     if (result.success) {
       localStorage.setItem("token", result.data.token);
-      let student = await fetch(`${API_URL}/api/student/get-student`, {
+      let student = await fetch(window.API_BASE_URL + "/api/student/get-student", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

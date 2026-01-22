@@ -5,14 +5,12 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useSocket } from "../../../context/SocketContext";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 function Complaints() {
   const socket = useSocket();
   const getComplaints = async () => {
     // const hostel = JSON.parse(localStorage.getItem("hostel"))._id ;
     const hostel = JSON.parse(localStorage.getItem("hostel") || "{}")._id || "";
-    const response = await fetch(`${API_URL}/api/complaint/hostel`, {
+    const response = await fetch(`http://localhost:3000/api/complaint/hostel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
