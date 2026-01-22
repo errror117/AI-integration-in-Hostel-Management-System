@@ -3,11 +3,13 @@ import { Input } from "../../LandingSite/AuthPage/Input";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function Suggestions() {
   const registerSuggestions = async (e) => {
     e.preventDefault();
     const student = JSON.parse(localStorage.getItem("student"));
-    const response = await fetch("http://localhost:3000/api/suggestion/register", {
+    const response = await fetch(`${API_URL}/api/suggestion/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

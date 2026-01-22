@@ -3,6 +3,8 @@ import { Doughnut } from "react-chartjs-2";
 import { useSocket } from "../../../context/SocketContext";
 import { toast } from "react-toastify";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const List = ({ invoiceList }) => {
   return (
     <div className="w-full max-w-md p-4 rounded-lg shadow sm:p-8 bg-neutral-950 drop-shadow-xl overflow-y-auto max-h-70">
@@ -74,7 +76,7 @@ function Home() {
 
     // Fetch attendance
     const fetchAttendance = async () => {
-      const res = await fetch("http://localhost:3000/api/attendance/get", {
+      const res = await fetch(`${API_URL}/api/attendance/get", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ student: localStudent._id }),
@@ -91,7 +93,7 @@ function Home() {
     fetchAttendance();
 
     // Fetch invoices
-    fetch("http://localhost:3000/api/invoice/student", {
+    fetch(`${API_URL}/api/invoice/student", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ student: localStudent._id }),

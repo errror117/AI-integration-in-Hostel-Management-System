@@ -14,6 +14,8 @@ import { getAllStudents } from "../../../../utils";
 import { toast } from "react-toastify";
 import { useSocket } from "../../../../context/SocketContext";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function Home() {
   const socket = useSocket();
   const admin = JSON.parse(localStorage.getItem("admin"));
@@ -31,7 +33,7 @@ function Home() {
 
   const getComplaints = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
-    const response = await fetch(`http://localhost:3000/api/complaint/hostel`, {
+    const response = await fetch(`${API_URL}/api/complaint/hostel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -83,7 +85,7 @@ function Home() {
 
   const getRequests = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
-    const res = await fetch("http://localhost:3000/api/messoff/list", {
+    const res = await fetch(`${API_URL}/api/messoff/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

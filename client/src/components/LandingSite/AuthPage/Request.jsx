@@ -2,6 +2,8 @@ import { Input } from "./Input";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export default function RequestAcc() {
   const register = (event) => {
     event.preventDefault();
@@ -9,7 +11,7 @@ export default function RequestAcc() {
       cms_id: inputCms,
     };
 
-    fetch("http://localhost:3000/api/request/register", {
+    fetch(`${API_URL}/api/request/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -19,7 +19,7 @@
 //       type: type,
 //     };
 
-//     const res = await fetch("http://localhost:3000/api/complaint/register", {
+//     const res = await fetch(`${API_URL}/api/complaint/register", {
 //       method: "POST",
 //       headers: {
 //         "Content-Type": "application/json",
@@ -101,7 +101,7 @@
 //     const student = JSON.parse(localStorage.getItem("student"));
 //     const cmpln = { student: student._id };
 //     const fetchComplaints = async () => {
-//       const res = await fetch("http://localhost:3000/api/complaint/student", {
+//       const res = await fetch(`${API_URL}/api/complaint/student", {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -272,6 +272,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { useSocket } from "../../../context/SocketContext";
 import { uploadComplaintAttachments } from "../../../utils/uploadService";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function Complaints() {
   const socket = useSocket();
   const [loading, setLoading] = useState(false);
@@ -317,7 +319,7 @@ function Complaints() {
 
   const fetchComplaints = async (studentId) => {
     try {
-      const res = await fetch("http://localhost:3000/api/complaint/student", {
+      const res = await fetch(`${API_URL}/api/complaint/student", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -366,7 +368,7 @@ function Complaints() {
         attachments: attachmentUrls // Include uploaded file URLs
       };
 
-      const res = await fetch("http://localhost:3000/api/complaint/register", {
+      const res = await fetch(`${API_URL}/api/complaint/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

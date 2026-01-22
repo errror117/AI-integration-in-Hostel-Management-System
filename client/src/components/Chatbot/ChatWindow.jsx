@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PaperAirplaneIcon, XMarkIcon, ChatBubbleLeftRightIcon, SparklesIcon, ChevronDownIcon } from "@heroicons/react/24/solid";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const ChatWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
@@ -65,7 +67,7 @@ const ChatWindow = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3000/api/chatbot/message", {
+      const response = await fetch(`${API_URL}/api/chatbot/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -6,6 +6,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useSocket } from "../../../context/SocketContext";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function Mess() {
   const socket = useSocket();
   let requestMessOff = async (event) => {
@@ -17,7 +19,7 @@ function Mess() {
       return_date: returnDate,
     };
 
-    let response = await fetch("http://localhost:3000/api/Messoff/request", {
+    let response = await fetch(`${API_URL}/api/Messoff/request", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +97,7 @@ function Mess() {
     let student = JSON.parse(localStorage.getItem("student"));
     setLoading(true);
     if (student) {
-      fetch("http://localhost:3000/api/Messoff/count", {
+      fetch(`${API_URL}/api/Messoff/count", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

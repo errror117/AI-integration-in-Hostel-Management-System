@@ -3,12 +3,14 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingBar from "react-top-loading-bar";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function Invoices() {
   const genInvoices = async () => {
     setProgress(30);
     let hostel = JSON.parse(localStorage.getItem("hostel"));
     try {
-      const res = await fetch("http://localhost:3000/api/invoice/generate", {
+      const res = await fetch(`${API_URL}/api/invoice/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +61,7 @@ function Invoices() {
   const approveInvoice = async (id) => {
     setProgress(30);
     try {
-      const res = await fetch("http://localhost:3000/api/invoice/update", {
+      const res = await fetch(`${API_URL}/api/invoice/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,7 +113,7 @@ function Invoices() {
     setProgress(30);
     let hostel = JSON.parse(localStorage.getItem("hostel"));
     try {
-      const res = await fetch("http://localhost:3000/api/invoice/getbyid", {
+      const res = await fetch(`${API_URL}/api/invoice/getbyid", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     LineChart,
     Line,
     BarChart,
@@ -31,14 +33,14 @@ export default function AIPredictions() {
     const fetchPredictions = async () => {
         try {
             // Fetch prediction data
-            const res = await fetch("http://localhost:3000/api/analytics/predictions");
+            const res = await fetch(`${API_URL}/api/analytics/predictions");
             const data = await res.json();
             if (data.success) {
                 setPredictions(data.data);
             }
 
             // Fetch chatbot stats
-            const chatRes = await fetch("http://localhost:3000/api/analytics/chatbot-stats");
+            const chatRes = await fetch(`${API_URL}/api/analytics/chatbot-stats");
             const chatData = await chatRes.json();
             if (chatData.success) {
                 setChatStats(chatData.data);
