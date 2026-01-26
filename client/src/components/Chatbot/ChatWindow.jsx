@@ -9,15 +9,22 @@ const ChatWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
 
-  // Hide chatbot on login pages, landing site, and dashboard home pages
-  const hiddenPaths = [
-    '/', '/about', '/contact', '/auth', '/auth/login', '/auth/admin-login', '/auth/request', '/auth/superadmin-login',
-    '/student-dashboard', '/admin-dashboard', '/superadmin'
+  // Check if user is authenticated
+  const token = localStorage.getItem("token");
+  const isAuthenticated = Boolean(token);
+
+  // Hide chatbot ONLY on public/auth pages (not on any authenticated dashboard pages)
+  const publicPaths = [
+    '/', '/about', '/contact', '/auth', '/auth/login', '/auth/admin-login', '/auth/request', '/auth/superadmin-login'
   ];
-  const shouldHide = hiddenPaths.includes(location.pathname);
+  const isPublicPage = publicPaths.includes(location.pathname);
+
+  // Chatbot should be visible when: user is authenticated AND not on a public page
+  // OR: on a dashboard subpage (where user must be authenticated)
+  const shouldHide = !isAuthenticated || isPublicPage;
 
   // Detect user role: super_admin, admin, or student
-  const isSuperAdmin = Boolean(localStorage.getItem("superadmin"));
+  const isSuperAdmin = Boolean(localStorage.getItem("superadmin")) || Boolean(localStorage.getItem("user") && JSON.parse(localStorage.getItem("user"))?.role === 'super_admin');
   const isAdmin = Boolean(localStorage.getItem("admin"));
   const userRole = isSuperAdmin ? "super_admin" : (isAdmin ? "admin" : "student");
 
@@ -44,7 +51,7 @@ const ChatWindow = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Don't render chatbot on hidden paths
+  // Don't render chatbot if should be hidden
   if (shouldHide) return null;
 
   const scrollToBottom = () => {
