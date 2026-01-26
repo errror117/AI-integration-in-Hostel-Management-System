@@ -19,7 +19,7 @@ const SuperAdminDashboard = () => {
         subscriptionPlan: 'free'
     });
 
-    const API_URL = window.API_BASE_URL || 'https://hostelease-pikq.onrender.com';
+    const API_URL = window.API_BASE_URL || 'https://hostelease-api.onrender.com';
 
     useEffect(() => {
         fetchDashboardData();
