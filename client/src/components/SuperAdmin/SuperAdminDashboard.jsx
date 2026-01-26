@@ -19,7 +19,7 @@ const SuperAdminDashboard = () => {
         subscriptionPlan: 'free'
     });
 
-    const API_URL = import.meta.env.VITE_API_URL || 'https://hostelease-api.onrender.com/api';
+    const API_URL = window.API_BASE_URL || 'https://hostelease-pikq.onrender.com';
 
     useEffect(() => {
         fetchDashboardData();
@@ -31,10 +31,10 @@ const SuperAdminDashboard = () => {
             const token = localStorage.getItem('token');
 
             const [statsRes, orgsRes] = await Promise.all([
-                axios.get(`${API_URL}/superadmin/stats`, {
+                axios.get(`${API_URL}/api/superadmin/stats`, {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
-                axios.get(`${API_URL}/superadmin/organizations`, {
+                axios.get(`${API_URL}/api/superadmin/organizations`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
@@ -55,7 +55,7 @@ const SuperAdminDashboard = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.post(`${API_URL}/superadmin/organizations`, newOrg, {
+            await axios.post(`${API_URL}/api/superadmin/organizations`, newOrg, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -80,7 +80,7 @@ const SuperAdminDashboard = () => {
         try {
             const token = localStorage.getItem('token');
             await axios.patch(
-                `${API_URL}/superadmin/organizations/${orgId}/status`,
+                `${API_URL}/api/superadmin/organizations/${orgId}/status`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
