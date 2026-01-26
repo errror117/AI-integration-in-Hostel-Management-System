@@ -148,8 +148,13 @@ const getHostel = async (req, res) => {
       return res.status(400).json({ success, errors: errors.array() });
     }
 
-    const organizationId = req.organizationId;
+    // Get organizationId from JWT token (set by protect middleware)
+    const organizationId = req.user?.organizationId;
     const { id } = req.body;
+
+    if (!organizationId) {
+      return res.status(400).json({ success, errors: [{ msg: "Organization context missing" }] });
+    }
 
     // Find admin in THIS organization
     let admin = await Admin.findOne({ organizationId, _id: id });

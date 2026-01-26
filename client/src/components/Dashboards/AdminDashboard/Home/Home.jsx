@@ -30,13 +30,17 @@ function Home() {
   };
 
   const getComplaints = async () => {
-    const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
+    const hostelData = JSON.parse(localStorage.getItem("hostel"));
+    if (!hostelData || !hostelData._id) {
+      console.log("No hostel data available");
+      return;
+    }
     const response = await fetch(window.API_BASE_URL + `/api/complaint/hostel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ hostel }),
+      body: JSON.stringify({ hostel: hostelData._id }),
     });
 
     const data = await response.json();
@@ -54,6 +58,10 @@ function Home() {
 
   const getSuggestions = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
+    if (!hostel || !hostel._id) {
+      console.log("No hostel data available");
+      return;
+    }
     const response = await fetch(
       window.API_BASE_URL + "/api/suggestion/hostel",
       {
@@ -83,6 +91,10 @@ function Home() {
 
   const getRequests = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
+    if (!hostel || !hostel._id) {
+      console.log("No hostel data available");
+      return;
+    }
     const res = await fetch(window.API_BASE_URL + "/api/messoff/list", {
       method: "POST",
       headers: {
