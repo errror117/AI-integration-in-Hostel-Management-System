@@ -27,7 +27,7 @@ function RegisterStudent() {
         password: password,
       };
       const res = await fetch(
-        "http://localhost:3000/api/student/register-student",
+        window.API_BASE_URL + "/api/student/register-student",
         {
           method: "POST",
           headers: {
@@ -229,7 +229,7 @@ function RegisterStudent() {
                 value:
                   JSON.parse(localStorage.getItem("hostel") || "{}").name || "",
                 disabled: true,
-                onChange: () => {},
+                onChange: () => { },
               }}
             />
             <Input

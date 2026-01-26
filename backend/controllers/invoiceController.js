@@ -1,7 +1,8 @@
 const { validationResult } = require('express-validator');
-const { Invoice, MessOff, Student, Hostel } = require('../models');
+const { Invoice, MessOff, Student, Hostel, Organization } = require('../models');
 const { Mess_bill_per_day } = require('../constants/mess');
 const { isValidObjectId, checkRecordExists, errorResponse, successResponse } = require('../utils/validators');
+const emailService = require('../services/emailService');
 
 // @route   POST api/invoice/generate
 // @desc    Generate invoices for hostel (within organization)
@@ -111,6 +112,28 @@ exports.generateInvoices = async (req, res) => {
             try {
                 const result = await Invoice.insertMany(invoicesToCreate, { ordered: false });
                 count = result.length;
+
+                // Send email notifications to students (non-blocking)
+                try {
+                    const organization = await Organization.findById(organizationId);
+                    if (organization) {
+                        // Create student lookup map
+                        const studentMap = students.reduce((acc, s) => {
+                            acc[s._id.toString()] = s;
+                            return acc;
+                        }, {});
+
+                        // Send emails asynchronously (don't await)
+                        result.forEach(invoice => {
+                            const student = studentMap[invoice.student.toString()];
+                            if (student && student.email) {
+                                emailService.sendInvoiceReminder(student, invoice, organization, 0);
+                            }
+                        });
+                    }
+                } catch (emailErr) {
+                    console.log('Invoice email notifications skipped:', emailErr.message);
+                }
             } catch (err) {
                 // Handle partial success in bulk insert
                 if (err.insertedDocs) {

@@ -39,6 +39,17 @@ const ADMIN_INTENTS = {
     'ADMIN_PREDICT_TRENDS': ['trends', 'patterns', 'forecast', 'prediction', 'predict']
 };
 
+// Super Admin Intent Keywords
+const SUPER_ADMIN_INTENTS = {
+    'SA_ORGS': ['organizations', 'all orgs', 'how many organizations', 'tenants', 'clients', 'all organizations', 'show organizations'],
+    'SA_SYSTEM': ['system', 'health', 'server', 'uptime', 'system status', 'server status'],
+    'SA_SUBSCRIPTIONS': ['subscriptions', 'plans', 'billing', 'revenue', 'subscription overview'],
+    'SA_USERS': ['all users', 'total users', 'registered users', 'how many users', 'user count'],
+    'SA_CREATE_ORG': ['create organization', 'new organization', 'add organization', 'add tenant'],
+    'SA_ANALYTICS': ['global analytics', 'platform stats', 'overall stats', 'platform analytics', 'system analytics'],
+    'SA_GREETING': ['hello', 'hi', 'hey', 'good morning', 'good evening']
+};
+
 // HELPER: Map fuzzy input to strict Schema Enum
 function mapToValidCategory(input) {
     const lower = input.toLowerCase();
@@ -67,8 +78,17 @@ exports.processMessage = async (req, res) => {
             return res.json({ reply: "Please ask me something! 😊", intent: 'EMPTY_QUERY', confidence: 0 });
         }
 
+        // ========== SUPER ADMIN ROLE HANDLING ==========
+        if (role === 'super_admin') {
+            const superAdminResult = await handleSuperAdminQuery(query, userId);
+            if (userId) {
+                await logChatInteraction(userId, null, role, query, superAdminResult.intent, 0.95, {}, superAdminResult.reply);
+            }
+            return res.json({ reply: superAdminResult.reply, intent: superAdminResult.intent, confidence: 1.0, data: superAdminResult.data || {} });
+        }
+
         // ========== ADMIN ROLE HANDLING ==========
-        if (role === 'admin') {
+        if (role === 'admin' || role === 'org_admin') {
             // Check for existing admin conversation state
             let adminConversation = null;
             if (userId) {
@@ -825,13 +845,13 @@ async function handleAdminQuery(query, userId = null, organizationId = null) {
 
         case 'ADMIN_MESS': {
             const MessOff = require('../models/MessOff');
-            const pendingMessOffs = await MessOff.find({ status: 'pending' })
+            const pendingMessOffs = await MessOff.find({ organizationId, status: 'pending' })
                 .populate('student', 'name room_no')
                 .sort({ request_date: -1 })
                 .limit(5);
 
-            const totalPending = await MessOff.countDocuments({ status: 'pending' });
-            const totalApproved = await MessOff.countDocuments({ status: 'approved' });
+            const totalPending = await MessOff.countDocuments({ organizationId, status: 'pending' });
+            const totalApproved = await MessOff.countDocuments({ organizationId, status: 'approved' });
 
             let messOffList = pendingMessOffs.map(m => {
                 const from = new Date(m.leaving_date).toDateString().slice(4, 10);
@@ -857,12 +877,13 @@ async function handleAdminQuery(query, userId = null, organizationId = null) {
             tomorrow.setDate(tomorrow.getDate() + 1);
 
             const todayAttendance = await Attendance.find({
+                organizationId,
                 date: { $gte: today, $lt: tomorrow }
             });
 
             const presentCount = todayAttendance.filter(a => a.status === 'present').length;
             const absentCount = todayAttendance.filter(a => a.status === 'absent').length;
-            const totalStudents = await Student.countDocuments();
+            const totalStudents = await Student.countDocuments({ organizationId });
             const unmarkedCount = totalStudents - todayAttendance.length;
             const attendanceRate = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0;
 
@@ -898,7 +919,7 @@ async function handleAdminQuery(query, userId = null, organizationId = null) {
             const Attendance = require('../models/Attendance');
             // Calculate average complaints per day over last 14 days
             const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-            const recentComplaints = await Complaint.countDocuments({ date: { $gte: twoWeeksAgo } });
+            const recentComplaints = await Complaint.countDocuments({ organizationId, date: { $gte: twoWeeksAgo } });
             const avgDaily = Math.round(recentComplaints / 14);
 
             // Predict next 7 days
@@ -929,7 +950,7 @@ async function handleAdminQuery(query, userId = null, organizationId = null) {
 
         case 'ADMIN_PREDICT_MESS': {
             const Attendance = require('../models/Attendance');
-            const totalStudents = await Student.countDocuments();
+            const totalStudents = await Student.countDocuments({ organizationId });
 
             // Get attendance pattern for tomorrow's day of week
             const tomorrow = new Date();
@@ -958,10 +979,10 @@ async function handleAdminQuery(query, userId = null, organizationId = null) {
 
         case 'ADMIN_PREDICT_TRENDS': {
             const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-            const recentComplaints = await Complaint.countDocuments({ date: { $gte: twoWeeksAgo } });
-            const pendingComplaints = await Complaint.countDocuments({ status: 'pending' });
-            const totalStudents = await Student.countDocuments();
-            const chatLogs = await ChatLog.countDocuments();
+            const recentComplaints = await Complaint.countDocuments({ organizationId, date: { $gte: twoWeeksAgo } });
+            const pendingComplaints = await Complaint.countDocuments({ organizationId, status: 'pending' });
+            const totalStudents = await Student.countDocuments({ organizationId });
+            const chatLogs = await ChatLog.countDocuments({ organizationId });
 
             // Calculate trends
             const avgDailyComplaints = Math.round(recentComplaints / 14);
@@ -1020,6 +1041,214 @@ async function handleAdminQuery(query, userId = null, organizationId = null) {
                     `📊 **"Show trends"** - AI trend analysis\n` +
                     `📥 **"Download report"** - Export to Excel\n\n` +
                     `How may I assist you, Sir/Ma'am?`
+            };
+    }
+}
+
+// ========== SUPER ADMIN CHATBOT HANDLERS ==========
+
+function classifySuperAdminIntent(query) {
+    const lowerQuery = query.toLowerCase();
+
+    for (const [intent, keywords] of Object.entries(SUPER_ADMIN_INTENTS)) {
+        if (keywords.some(kw => lowerQuery.includes(kw))) {
+            return intent;
+        }
+    }
+
+    return 'SA_HELP';
+}
+
+async function handleSuperAdminQuery(query, userId = null) {
+    const Organization = require('../models/Organization');
+    const User = require('../models/User');
+    const intent = classifySuperAdminIntent(query);
+
+    switch (intent) {
+        case 'SA_GREETING': {
+            const totalOrgs = await Organization.countDocuments();
+            const activeOrgs = await Organization.countDocuments({ status: 'active' });
+            const totalUsers = await User.countDocuments();
+            const totalStudents = await Student.countDocuments();
+
+            return {
+                intent: 'SA_GREETING',
+                reply: `🎯 **Welcome, Super Administrator!**\n\n` +
+                    `Here's your platform overview:\n\n` +
+                    `🏢 **Organizations:** ${totalOrgs} (${activeOrgs} active)\n` +
+                    `👥 **Total Users:** ${totalUsers}\n` +
+                    `🎓 **Total Students:** ${totalStudents}\n\n` +
+                    `**Available Commands:**\n` +
+                    `• 🏢 **"Organizations"** - View all organizations\n` +
+                    `• 📊 **"Platform stats"** - Global analytics\n` +
+                    `• 💳 **"Subscriptions"** - Billing overview\n` +
+                    `• 🔧 **"System status"** - Health check\n\n` +
+                    `How may I assist you today?`,
+                data: { totalOrgs, totalUsers }
+            };
+        }
+
+        case 'SA_ORGS': {
+            const organizations = await Organization.find()
+                .select('name slug status subscription createdAt')
+                .sort({ createdAt: -1 })
+                .limit(10);
+
+            const totalOrgs = await Organization.countDocuments();
+            const activeOrgs = await Organization.countDocuments({ status: 'active' });
+            const trialOrgs = await Organization.countDocuments({ 'subscription.status': 'trialing' });
+
+            let orgList = organizations.map((org, idx) => {
+                const plan = org.subscription?.plan || 'free';
+                const status = org.status === 'active' ? '✅' : '⚠️';
+                return `${idx + 1}. ${status} **${org.name}** (${org.slug}) - ${plan.toUpperCase()}`;
+            }).join('\n');
+
+            return {
+                intent: 'SA_ORGS',
+                reply: `🏢 **Organization Overview**\n\n` +
+                    `📊 **Statistics:**\n` +
+                    `• Total: ${totalOrgs}\n` +
+                    `• Active: ${activeOrgs}\n` +
+                    `• On Trial: ${trialOrgs}\n\n` +
+                    `**Recent Organizations:**\n${orgList || 'No organizations yet'}\n\n` +
+                    `💡 Go to **Super Admin Dashboard** to manage organizations.`,
+                data: { totalOrgs, activeOrgs, organizations: organizations.length }
+            };
+        }
+
+        case 'SA_SYSTEM': {
+            const mongoose = require('mongoose');
+            const uptime = process.uptime();
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            const memoryUsage = process.memoryUsage();
+            const heapUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
+            const dbStatus = mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected';
+
+            return {
+                intent: 'SA_SYSTEM',
+                reply: `🔧 **System Health Report**\n\n` +
+                    `**Server Status:**\n` +
+                    `• 🟢 Status: Online\n` +
+                    `• ⏰ Uptime: ${hours}h ${minutes}m\n` +
+                    `• 💾 Memory: ${heapUsedMB} MB used\n\n` +
+                    `**Database:**\n` +
+                    `• ${dbStatus}\n` +
+                    `• Type: MongoDB\n\n` +
+                    `**Services:**\n` +
+                    `• 🤖 AI Chatbot: ✅ Active\n` +
+                    `• 📧 Email: ${process.env.EMAIL_USER ? '✅ Configured' : '⚠️ Not Configured'}\n` +
+                    `• 🔔 Socket.IO: ✅ Active\n\n` +
+                    `All systems operational!`,
+                data: { uptime: `${hours}h ${minutes}m`, memory: heapUsedMB }
+            };
+        }
+
+        case 'SA_SUBSCRIPTIONS': {
+            const Organization = require('../models/Organization');
+
+            const freeOrgs = await Organization.countDocuments({ 'subscription.plan': 'free' });
+            const starterOrgs = await Organization.countDocuments({ 'subscription.plan': 'starter' });
+            const professionalOrgs = await Organization.countDocuments({ 'subscription.plan': 'professional' });
+            const enterpriseOrgs = await Organization.countDocuments({ 'subscription.plan': 'enterprise' });
+            const totalOrgs = await Organization.countDocuments();
+
+            return {
+                intent: 'SA_SUBSCRIPTIONS',
+                reply: `💳 **Subscription Overview**\n\n` +
+                    `**Plan Distribution:**\n` +
+                    `• 🆓 Free: ${freeOrgs} organizations\n` +
+                    `• ⭐ Starter: ${starterOrgs} organizations\n` +
+                    `• 🚀 Professional: ${professionalOrgs} organizations\n` +
+                    `• 🏆 Enterprise: ${enterpriseOrgs} organizations\n\n` +
+                    `📊 **Total:** ${totalOrgs} organizations\n\n` +
+                    `**Pricing Tiers:**\n` +
+                    `• Free: Up to 50 students\n` +
+                    `• Starter: Up to 200 students\n` +
+                    `• Professional: Up to 500 students\n` +
+                    `• Enterprise: Unlimited\n\n` +
+                    `💡 Manage subscriptions in the Super Admin Dashboard.`,
+                data: { freeOrgs, starterOrgs, professionalOrgs, enterpriseOrgs }
+            };
+        }
+
+        case 'SA_USERS': {
+            const User = require('../models/User');
+            const totalUsers = await User.countDocuments();
+            const superAdmins = await User.countDocuments({ role: 'super_admin' });
+            const orgAdmins = await User.countDocuments({ role: { $in: ['org_admin', 'admin'] } });
+            const students = await Student.countDocuments();
+
+            return {
+                intent: 'SA_USERS',
+                reply: `👥 **User Statistics**\n\n` +
+                    `**By Role:**\n` +
+                    `• 👑 Super Admins: ${superAdmins}\n` +
+                    `• 👔 Org Admins: ${orgAdmins}\n` +
+                    `• 🎓 Students: ${students}\n\n` +
+                    `📊 **Total Users:** ${totalUsers}\n\n` +
+                    `💡 View detailed user list in Super Admin Dashboard.`,
+                data: { totalUsers, superAdmins, orgAdmins, students }
+            };
+        }
+
+        case 'SA_CREATE_ORG': {
+            return {
+                intent: 'SA_CREATE_ORG',
+                reply: `🏢 **Create New Organization**\n\n` +
+                    `To create a new organization, go to:\n` +
+                    `📍 **Super Admin Dashboard → Organizations → Add New**\n\n` +
+                    `**Required Information:**\n` +
+                    `• Organization Name\n` +
+                    `• Slug (URL identifier)\n` +
+                    `• Admin Email\n` +
+                    `• Subscription Plan\n\n` +
+                    `The organization admin will receive login credentials via email.`,
+                data: {}
+            };
+        }
+
+        case 'SA_ANALYTICS': {
+            const totalOrgs = await Organization.countDocuments();
+            const totalStudents = await Student.countDocuments();
+            const totalComplaints = await Complaint.countDocuments();
+            const resolvedComplaints = await Complaint.countDocuments({ status: 'resolved' });
+            const chatLogs = await ChatLog.countDocuments();
+
+            const resolutionRate = totalComplaints > 0 ? Math.round((resolvedComplaints / totalComplaints) * 100) : 0;
+
+            return {
+                intent: 'SA_ANALYTICS',
+                reply: `📊 **Platform Analytics**\n\n` +
+                    `**Global Statistics:**\n` +
+                    `• 🏢 Organizations: ${totalOrgs}\n` +
+                    `• 🎓 Students: ${totalStudents}\n` +
+                    `• 📋 Total Complaints: ${totalComplaints}\n` +
+                    `• ✅ Resolution Rate: ${resolutionRate}%\n` +
+                    `• 💬 Chatbot Queries: ${chatLogs}\n\n` +
+                    `**Insights:**\n` +
+                    `• Avg students/org: ${totalOrgs > 0 ? Math.round(totalStudents / totalOrgs) : 0}\n` +
+                    `• Avg queries/student: ${totalStudents > 0 ? (chatLogs / totalStudents).toFixed(1) : 0}\n\n` +
+                    `📈 View detailed charts in the Analytics section.`,
+                data: { totalOrgs, totalStudents, resolutionRate }
+            };
+        }
+
+        case 'SA_HELP':
+        default:
+            return {
+                intent: 'SA_HELP',
+                reply: `👑 **Super Admin Assistant**\n\n` +
+                    `I can help you manage the entire platform:\n\n` +
+                    `🏢 **"Organizations"** - View all organizations\n` +
+                    `💳 **"Subscriptions"** - Billing & plans overview\n` +
+                    `👥 **"Users"** - User statistics\n` +
+                    `🔧 **"System status"** - Server health check\n` +
+                    `📊 **"Platform stats"** - Global analytics\n` +
+                    `➕ **"Create organization"** - Add new tenant\n\n` +
+                    `What would you like to know?`,
+                data: {}
             };
     }
 }

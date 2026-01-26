@@ -139,12 +139,14 @@ exports.createOrganization = async (req, res) => {
     try {
         const {
             name,
-            subdomain,  // Will be used as slug
+            subdomain,
             email,
             phone,
             address,
             subscriptionPlan,
-            subscriptionStatus
+            subscriptionStatus,
+            adminName, // Added
+            adminPassword // Added
         } = req.body;
 
         // Convert subdomain to slug format
@@ -172,7 +174,7 @@ exports.createOrganization = async (req, res) => {
         const plan = subscriptionPlan || 'free';
         const planLimits = Organization.getPlanLimits(plan);
 
-        // Create organization with nested structure
+        // Create organization
         const organization = await Organization.create({
             name,
             slug,
@@ -199,13 +201,56 @@ exports.createOrganization = async (req, res) => {
                 exportData: plan !== 'free',
                 apiAccess: plan === 'professional' || plan === 'enterprise',
                 whiteLabel: plan === 'enterprise'
+            },
+            usage: {
+                adminCount: 1 // We will create one admin
             }
         });
 
+        // --- Create Admin User ---
+        const bcrypt = require('bcryptjs');
+        const salt = await bcrypt.genSalt(10);
+        // Default password if not provided
+        const passwordToHash = adminPassword || 'admin123';
+        const hashedPassword = await bcrypt.hash(passwordToHash, salt);
+
+        const adminUser = new User({
+            name: adminName || 'Admin',
+            email: email, // Use organization contact email for admin
+            password: hashedPassword,
+            organizationId: organization._id,
+            role: 'org_admin',
+            isAdmin: true,
+            isActive: true,
+            isVerified: true,
+            verifiedAt: new Date()
+        });
+
+        await adminUser.save();
+
+        // Create Admin Profile
+        const adminProfile = new Admin({
+            name: adminName || 'Admin',
+            email: email,
+            organizationId: organization._id,
+            user: adminUser._id,
+            contact: phone || '',
+            address: address || '',
+            hostel: null
+        });
+
+        await adminProfile.save();
+
         res.status(201).json({
             success: true,
-            message: 'Organization created successfully',
-            data: organization
+            message: 'Organization and Admin created successfully',
+            data: {
+                organization,
+                admin: {
+                    email: adminUser.email,
+                    password: passwordToHash // Return plain text once so SA knows (optional, verify security policy later)
+                }
+            }
         });
     } catch (error) {
         console.error('Error creating organization:', error);

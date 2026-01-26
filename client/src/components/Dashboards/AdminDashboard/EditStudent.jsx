@@ -75,7 +75,7 @@ export default function EditStudent() {
   // ① If student is not passed via state, fetch it
   useEffect(() => {
     if (!student) {
-      fetch(`http://localhost:3000/api/student/get-student/${id}`)
+      fetch(window.API_BASE_URL + `/api/student/get-student/${id}`)
         .then((res) => (res.ok ? res.json() : Promise.reject("404")))
         .then((data) => {
           setStudent(data);
@@ -93,7 +93,7 @@ export default function EditStudent() {
   const save = async () => {
     try {
       const res = await fetch(
-        "http://localhost:3000/api/student/update-student",
+        window.API_BASE_URL + "/api/student/update-student",
         {
           method: "POST", // your backend uses POST
           headers: { "Content-Type": "application/json" },

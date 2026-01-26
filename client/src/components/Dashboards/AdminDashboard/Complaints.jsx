@@ -10,7 +10,7 @@ function Complaints() {
   const getComplaints = async () => {
     // const hostel = JSON.parse(localStorage.getItem("hostel"))._id ;
     const hostel = JSON.parse(localStorage.getItem("hostel") || "{}")._id || "";
-    const response = await fetch(`http://localhost:3000/api/complaint/hostel`, {
+    const response = await fetch(window.API_BASE_URL + `/api/complaint/hostel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +61,7 @@ function Complaints() {
 
   const dismissComplaint = async (id) => {
     const response = await fetch(
-      "http://localhost:3000/api/complaint/resolve/",
+      window.API_BASE_URL + "/api/complaint/resolve/",
       {
         method: "POST",
         headers: {

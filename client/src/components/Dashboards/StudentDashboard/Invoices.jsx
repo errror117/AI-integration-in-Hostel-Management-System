@@ -156,7 +156,7 @@ function Invoices() {
     const fetchInvoices = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/invoice/student",
+          window.API_BASE_URL + "/api/invoice/student",
           {
             method: "POST",
             headers: {

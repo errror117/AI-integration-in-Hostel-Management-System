@@ -55,7 +55,7 @@ function Attendance() {
   const [markedStudents, setMarkedStudents] = useState([]);
 
   const markAttendance = async (id, isPresent) => {
-    const data = await fetch(`http://localhost:3000/api/attendance/mark`, {
+    const data = await fetch(window.API_BASE_URL + `/api/attendance/mark`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

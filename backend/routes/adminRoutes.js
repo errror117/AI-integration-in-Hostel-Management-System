@@ -57,10 +57,11 @@ router.post(
 router.post("/get-admin", protect, getAdmin);
 
 // @route  POST api/admin/get-hostel
-// @desc   Get hostel by name
-// @access Public
+// @desc   Get hostel by admin id
+// @access Private (requires auth token)
 router.post(
   "/get-hostel",
+  protect,
   [check("id", "Id is required").notEmpty()],
   getHostel
 );

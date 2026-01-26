@@ -25,7 +25,15 @@ const FAQEmbeddingSchema = new Schema({
     },
     category: {
         type: String,
-        enum: ['hostel_rules', 'mess_info', 'fees', 'facilities', 'complaints', 'permissions', 'general'],
+        enum: ['hostel_rules', 'mess_info', 'fees', 'facilities', 'complaints', 'permissions', 'general',
+            'rules', 'mess', 'emergency', 'leave', 'account', 'support', 'about',
+            'organization', 'subscription', 'system', 'management', 'invoices',
+            'reports', 'students', 'rooms', 'attendance', 'analytics'],
+        default: 'general'
+    },
+    role: {
+        type: String,
+        enum: ['student', 'admin', 'super_admin', 'general'],
         default: 'general'
     },
     keywords: [{

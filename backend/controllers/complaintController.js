@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
-const { Complaint, Student, Hostel } = require('../models');
+const { Complaint, Student, Hostel, Organization } = require('../models');
 const { isValidObjectId, checkRecordExists, errorResponse, successResponse } = require('../utils/validators');
+const emailService = require('../services/emailService');
 
 // @route   POST api/complaint/register
 // @desc    Register complaint
@@ -220,6 +221,17 @@ exports.resolve = async (req, res) => {
 
         await complaint.save();
 
+        // Send email notification to student
+        try {
+            const student = await Student.findById(complaint.student);
+            const organization = await Organization.findById(organizationId);
+            if (student && organization) {
+                emailService.sendComplaintUpdate(student, complaint, organization);
+            }
+        } catch (emailErr) {
+            console.log('Email notification skipped:', emailErr.message);
+        }
+
         // Emit real-time event (only to organization)
         req.app.get('io').to(`org_${organizationId}`).emit('complaint:updated', complaint);
 
@@ -263,6 +275,17 @@ exports.updateStatus = async (req, res) => {
         complaint.updatedAt = new Date();
 
         await complaint.save();
+
+        // Send email notification to student
+        try {
+            const student = await Student.findById(complaint.student);
+            const organization = await Organization.findById(organizationId);
+            if (student && organization) {
+                emailService.sendComplaintUpdate(student, complaint, organization);
+            }
+        } catch (emailErr) {
+            console.log('Email notification skipped:', emailErr.message);
+        }
 
         // Emit real-time event
         req.app.get('io').to(`org_${organizationId}`).emit('complaint:updated', complaint);

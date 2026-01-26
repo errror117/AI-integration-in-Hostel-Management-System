@@ -174,7 +174,7 @@ function Suggestions() {
   const getSuggestions = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
     const response = await fetch(
-      "http://localhost:3000/api/suggestion/hostel",
+      window.API_BASE_URL + "/api/suggestion/hostel",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -199,7 +199,7 @@ function Suggestions() {
   const updateSuggestion = async (id) => {
     setLoader(true);
     const response = await fetch(
-      "http://localhost:3000/api/suggestion/update",
+      window.API_BASE_URL + "/api/suggestion/update",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

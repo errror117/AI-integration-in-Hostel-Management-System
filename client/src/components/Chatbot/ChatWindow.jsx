@@ -1,22 +1,41 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PaperAirplaneIcon, XMarkIcon, ChatBubbleLeftRightIcon, SparklesIcon, ChevronDownIcon } from "@heroicons/react/24/solid";
 
 const ChatWindow = () => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
 
-  // Detect if user is admin or student
+  // Hide chatbot on login pages, landing site, and dashboard home pages
+  const hiddenPaths = [
+    '/', '/about', '/contact', '/auth', '/auth/login', '/auth/admin-login', '/auth/request', '/auth/superadmin-login',
+    '/student-dashboard', '/admin-dashboard', '/superadmin'
+  ];
+  const shouldHide = hiddenPaths.includes(location.pathname);
+
+  // Detect user role: super_admin, admin, or student
+  const isSuperAdmin = Boolean(localStorage.getItem("superadmin"));
   const isAdmin = Boolean(localStorage.getItem("admin"));
-  const userRole = isAdmin ? "admin" : "student";
+  const userRole = isSuperAdmin ? "super_admin" : (isAdmin ? "admin" : "student");
+
+  // Role-specific greeting messages
+  const getInitialMessage = () => {
+    if (isSuperAdmin) {
+      return "👑 **Welcome, Super Administrator!**\n\nI'm your Platform Management Assistant.\n\n**Quick Commands:**\n* 🏢 **Organizations** - View all tenants\n* 📊 **Platform Stats** - Global analytics\n* 💳 **Subscriptions** - Billing overview\n* 🔧 **System Status** - Health check\n\n*How may I assist you?*";
+    } else if (isAdmin) {
+      return "🎯 **Good day, Sir/Ma'am!**\n\nI'm your Admin Assistant, ready to report.\n\n**Quick Commands:**\n* 📊 **Summary** - Hostel status report\n* 📋 **Complaints** - What students are reporting\n* 💡 **Suggestions** - What students want\n* 🚨 **Urgent** - Priority issues\n\n*How may I assist you?*";
+    } else {
+      return "👋 **Hi there!** I'm your AI Hostel Assistant.\n\nI can help you with:\n* 🍲 **Mess Menu & Predictions**\n* 🛏️ **Room Availability**\n* 📝 **Complaints & Tracking**\n* 📊 **Expense Analysis**\n\n*How can I assist you today?*";
+    }
+  };
 
   const [messages, setMessages] = useState([
     {
       role: "bot",
-      content: isAdmin
-        ? "🎯 **Good day, Sir/Ma'am!**\n\nI'm your Admin Assistant, ready to report.\n\n**Quick Commands:**\n* 📊 **Summary** - Hostel status report\n* 📋 **Complaints** - What students are reporting\n* 💡 **Suggestions** - What students want\n* 🚨 **Urgent** - Priority issues\n\n*How may I assist you?*"
-        : "👋 **Hi there!** I'm your AI Hostel Assistant.\n\nI can help you with:\n* 🍲 **Mess Menu & Predictions**\n* 🛏️ **Room Availability**\n* 📝 **Complaints & Tracking**\n* 📊 **Expense Analysis**\n\n*How can I assist you today?*",
+      content: getInitialMessage(),
       timestamp: new Date().toISOString()
     },
   ]);
@@ -24,6 +43,9 @@ const ChatWindow = () => {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Don't render chatbot on hidden paths
+  if (shouldHide) return null;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,14 +61,28 @@ const ChatWindow = () => {
     }
   }, [isOpen, minimized]);
 
-  const quickActions = isAdmin ? [
+  // Super Admin quick actions
+  const superAdminActions = [
+    { label: "🏢 Organizations", query: "Show all organizations" },
+    { label: "📊 Platform Stats", query: "Platform stats" },
+    { label: "💳 Subscriptions", query: "Show subscription overview" },
+    { label: "👥 All Users", query: "How many users?" },
+    { label: "🔧 System Health", query: "System status" },
+    { label: "❓ Help", query: "Help me" },
+  ];
+
+  // Admin quick actions
+  const adminActions = [
     { label: "📊 Summary", query: "Give me a summary" },
     { label: "📋 Complaints", query: "Show complaints" },
     { label: "💡 Suggestions", query: "Show suggestions" },
     { label: "🚨 Urgent", query: "Show urgent issues" },
     { label: "🍽️ Mess Requests", query: "Mess off requests" },
     { label: "📥 Download", query: "Download report" },
-  ] : [
+  ];
+
+  // Student quick actions
+  const studentActions = [
     { label: "🍲 Mess Menu", query: "What is the mess menu today?" },
     { label: "📋 My Complaints", query: "Show my complaints" },
     { label: "⚠️ New Complaint", query: "I want to register a complaint" },
@@ -54,6 +90,9 @@ const ChatWindow = () => {
     { label: "💰 My Invoice", query: "Show my invoice" },
     { label: "❓ Help", query: "Help me" },
   ];
+
+  // Select actions based on role
+  const quickActions = isSuperAdmin ? superAdminActions : (isAdmin ? adminActions : studentActions);
 
   const sendMessage = async (query = input) => {
     if (!query.trim()) return;

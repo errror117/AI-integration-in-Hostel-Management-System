@@ -194,19 +194,23 @@ export default function AdminSignIn() {
 
   const getHostel = async () => {
     let admin = JSON.parse(localStorage.getItem("admin"));
+    let token = localStorage.getItem("token");
     try {
       const res = await fetch(window.API_BASE_URL + "/api/admin/get-hostel", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: admin._id }),
       });
 
       const data = await res.json();
-      localStorage.setItem("hostel", JSON.stringify(data.hostel));
+      if (data.success && data.hostel) {
+        localStorage.setItem("hostel", JSON.stringify(data.hostel));
+      }
     } catch (err) {
-      // console.log(err);
+      console.log("Error fetching hostel:", err);
     }
   };
 

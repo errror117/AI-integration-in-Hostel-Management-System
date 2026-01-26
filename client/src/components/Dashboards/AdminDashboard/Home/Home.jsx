@@ -31,7 +31,7 @@ function Home() {
 
   const getComplaints = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"))._id;
-    const response = await fetch(`http://localhost:3000/api/complaint/hostel`, {
+    const response = await fetch(window.API_BASE_URL + `/api/complaint/hostel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -55,7 +55,7 @@ function Home() {
   const getSuggestions = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
     const response = await fetch(
-      "http://localhost:3000/api/suggestion/hostel",
+      window.API_BASE_URL + "/api/suggestion/hostel",
       {
         method: "POST",
         headers: {
