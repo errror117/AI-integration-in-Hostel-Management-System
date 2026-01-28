@@ -11,7 +11,6 @@ Input.propTypes = {
   }).isRequired,
 };
 
-
 function Input({ field }) {
   const name = field.name;
   const placeholder = field.placeholder;
@@ -19,8 +18,7 @@ function Input({ field }) {
   const type = field.type;
   const value = field.value;
 
-  // Add a flexible pattern for email inputs that accepts numbers and special characters
-  const pattern = type === 'email' ? '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}' : undefined;
+  // No pattern needed - type="email" has built-in HTML5 validation
 
   return (
     <div>
@@ -34,11 +32,9 @@ function Input({ field }) {
         required={required}
         value={value}
         onChange={field.onChange}
-        pattern={pattern}
       />
     </div>
   );
 }
-
 
 export { Input };

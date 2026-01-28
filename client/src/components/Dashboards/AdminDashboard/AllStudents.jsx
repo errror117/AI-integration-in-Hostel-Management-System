@@ -139,6 +139,9 @@ function AllStudents() {
                     <p className="text-sm font-medium truncate text-white">
                       {student.name}
                     </p>
+                    <p className="text-xs truncate text-blue-400">
+                      📧 {student.email}
+                    </p>
                     <p className="text-sm truncate text-gray-400">
                       {student.cms_id} | Room: {student.room_no}
                     </p>

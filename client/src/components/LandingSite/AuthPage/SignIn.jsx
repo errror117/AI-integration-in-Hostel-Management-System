@@ -43,10 +43,10 @@ export default function SignIn() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${result.data.token}`
         },
         body: JSON.stringify({
-          isAdmin: result.data.user.isAdmin,
-          token: result.data.token
+          isAdmin: result.data.user.isAdmin
         })
       });
 

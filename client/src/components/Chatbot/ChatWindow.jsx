@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,12 +24,40 @@ const ChatWindow = () => {
   const shouldHide = !isAuthenticated || isPublicPage;
 
   // Detect user role: super_admin, admin, or student
-  const isSuperAdmin = Boolean(localStorage.getItem("superadmin")) || Boolean(localStorage.getItem("user") && JSON.parse(localStorage.getItem("user"))?.role === 'super_admin');
-  const isAdmin = Boolean(localStorage.getItem("admin"));
-  const userRole = isSuperAdmin ? "super_admin" : (isAdmin ? "admin" : "student");
+  // Priority: Check URL path first, then localStorage
+  const getUserRole = () => {
+    // Check URL path for role context
+    const path = location.pathname;
+    if (path.startsWith('/superadmin')) return 'super_admin';
+    if (path.startsWith('/admin-dashboard')) return 'admin';
+    if (path.startsWith('/student-dashboard')) return 'student';
 
-  // Role-specific greeting messages
-  const getInitialMessage = () => {
+    // Fallback to localStorage checks
+    // Check for super_admin in user object
+    try {
+      const userObj = localStorage.getItem("user");
+      if (userObj) {
+        const user = JSON.parse(userObj);
+        if (user?.role === 'super_admin') return 'super_admin';
+      }
+    } catch (e) { }
+
+    // Check for admin profile
+    if (localStorage.getItem("admin")) return 'admin';
+
+    // Check for student profile
+    if (localStorage.getItem("student")) return 'student';
+
+    // Default to student
+    return 'student';
+  };
+
+  const userRole = getUserRole();
+  const isSuperAdmin = userRole === 'super_admin';
+  const isAdmin = userRole === 'admin';
+
+  // Role-specific greeting messages - using useMemo to recalculate when role changes
+  const initialMessage = useMemo(() => {
     if (isSuperAdmin) {
       return "👑 **Welcome, Super Administrator!**\n\nI'm your Platform Management Assistant.\n\n**Quick Commands:**\n* 🏢 **Organizations** - View all tenants\n* 📊 **Platform Stats** - Global analytics\n* 💳 **Subscriptions** - Billing overview\n* 🔧 **System Status** - Health check\n\n*How may I assist you?*";
     } else if (isAdmin) {
@@ -37,12 +65,12 @@ const ChatWindow = () => {
     } else {
       return "👋 **Hi there!** I'm your AI Hostel Assistant.\n\nI can help you with:\n* 🍲 **Mess Menu & Predictions**\n* 🛏️ **Room Availability**\n* 📝 **Complaints & Tracking**\n* 📊 **Expense Analysis**\n\n*How can I assist you today?*";
     }
-  };
+  }, [isSuperAdmin, isAdmin]);
 
   const [messages, setMessages] = useState([
     {
       role: "bot",
-      content: getInitialMessage(),
+      content: initialMessage,
       timestamp: new Date().toISOString()
     },
   ]);
@@ -51,13 +79,11 @@ const ChatWindow = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Don't render chatbot if should be hidden
-  if (shouldHide) return null;
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // ✅ All hooks MUST be called before any conditional returns
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
@@ -67,6 +93,20 @@ const ChatWindow = () => {
       inputRef.current.focus();
     }
   }, [isOpen, minimized]);
+
+  // Reset messages when user role changes (e.g., logging in as different user)
+  useEffect(() => {
+    setMessages([
+      {
+        role: "bot",
+        content: initialMessage,
+        timestamp: new Date().toISOString()
+      },
+    ]);
+  }, [userRole, initialMessage]);
+
+  // Don't render chatbot if should be hidden (AFTER all hooks)
+  if (shouldHide) return null;
 
   // Super Admin quick actions
   const superAdminActions = [

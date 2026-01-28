@@ -10,6 +10,8 @@ const SuperAdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [selectedOrg, setSelectedOrg] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
     const [newOrg, setNewOrg] = useState({
         name: '',
         subdomain: '',
@@ -167,7 +169,7 @@ const SuperAdminDashboard = () => {
             </div>
 
             {/* Overview Tab */}
-            {activeTab === 'overview' && stats && (
+            {activeTab === 'overview' && stats && stats.overview && (
                 <motion.div
                     className="overview-section"
                     initial={{ opacity: 0, y: 20 }}
@@ -222,7 +224,7 @@ const SuperAdminDashboard = () => {
                     <div className="section-card">
                         <h3>📊 Subscription Breakdown</h3>
                         <div className="subscription-breakdown">
-                            {stats.subscriptionBreakdown.map((item) => (
+                            {(stats.subscriptionBreakdown || []).map((item) => (
                                 <div key={item._id} className="subscription-item">
                                     <div className="sub-info">
                                         <span className="sub-name">{item._id || 'Unknown'}</span>
@@ -243,24 +245,24 @@ const SuperAdminDashboard = () => {
                     <div className="section-card">
                         <h3>🆕 Recent Organizations</h3>
                         <div className="recent-orgs-list">
-                            {stats.recentOrganizations.map((org) => (
+                            {(stats.recentOrganizations || []).map((org) => (
                                 <div key={org._id} className="recent-org-item">
                                     <div className="org-info">
                                         <h4>{org.name}</h4>
-                                        <p>{org.subdomain}.hostelease.com</p>
+                                        <p>{org.slug || org.subdomain}.hostelease.com</p>
                                     </div>
                                     <div className="org-meta">
                                         <span
                                             className="plan-badge"
-                                            style={{ backgroundColor: getPlanColor(org.subscriptionPlan) }}
+                                            style={{ backgroundColor: getPlanColor(org.subscription?.plan || org.subscriptionPlan) }}
                                         >
-                                            {org.subscriptionPlan}
+                                            {org.subscription?.plan || org.subscriptionPlan}
                                         </span>
                                         <span
                                             className="status-badge"
-                                            style={{ backgroundColor: getStatusColor(org.subscriptionStatus) }}
+                                            style={{ backgroundColor: getStatusColor(org.subscription?.status || org.subscriptionStatus) }}
                                         >
-                                            {org.subscriptionStatus}
+                                            {org.subscription?.status || org.subscriptionStatus}
                                         </span>
                                     </div>
                                 </div>
@@ -277,17 +279,212 @@ const SuperAdminDashboard = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <div className="organizations-grid">
-                        {organizations.map((org) => (
-                            <OrganizationCard
-                                key={org._id}
-                                org={org}
-                                onUpdateStatus={handleUpdateStatus}
-                                onViewDetails={setSelectedOrg}
+                    {/* Organizations Header */}
+                    <div className="organizations-header">
+                        <div className="org-header-left">
+                            <h2>🏢 Organizations ({organizations.length})</h2>
+                            <span className="org-count-badge">
+                                {organizations.filter(o => (o.subscription?.status || o.subscriptionStatus) === 'active').length} active,{' '}
+                                {organizations.filter(o => (o.subscription?.status || o.subscriptionStatus) === 'trial').length} trial
+                            </span>
+                        </div>
+                        <div className="org-header-controls">
+                            <input
+                                type="text"
+                                placeholder="Search organizations..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="org-search-input"
                             />
-                        ))}
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="org-filter-select"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="trial">Trial</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                            <button
+                                className="refresh-btn"
+                                onClick={fetchDashboardData}
+                                title="Refresh data"
+                            >
+                                🔄 Sync
+                            </button>
+                        </div>
+                    </div>
+                    <div className="organizations-grid">
+                        {organizations
+                            .filter(org => {
+                                const status = org.subscription?.status || org.subscriptionStatus || 'trial';
+                                const matchesStatus = statusFilter === 'all' || status === statusFilter;
+                                const matchesSearch = !searchQuery ||
+                                    org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    (org.slug || org.subdomain || '').toLowerCase().includes(searchQuery.toLowerCase());
+                                return matchesStatus && matchesSearch;
+                            })
+                            .map((org) => (
+                                <OrganizationCard
+                                    key={org._id}
+                                    org={org}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onViewDetails={setSelectedOrg}
+                                />
+                            ))}
                     </div>
                 </motion.div>
+            )}
+
+            {/* Analytics Tab */}
+            {activeTab === 'analytics' && stats && (
+                <motion.div
+                    className="analytics-section"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                >
+                    <div className="section-card">
+                        <h3>📊 System Analytics</h3>
+                        <div className="analytics-grid">
+                            <div className="analytics-item">
+                                <div className="analytics-label">Total Organizations</div>
+                                <div className="analytics-value">{stats.overview?.totalOrganizations || organizations.length}</div>
+                                <div className="analytics-detail">
+                                    {stats.overview?.activeOrganizations || organizations.filter(o => (o.subscription?.status || o.subscriptionStatus) === 'active').length} active, {' '}
+                                    {stats.overview?.trialOrganizations || organizations.filter(o => (o.subscription?.status || o.subscriptionStatus) === 'trial').length} trial
+                                </div>
+                            </div>
+                            <div className="analytics-item">
+                                <div className="analytics-label">Total Students</div>
+                                <div className="analytics-value">{stats.overview?.totalStudents || 0}</div>
+                                <div className="analytics-detail">Across all organizations</div>
+                            </div>
+                            <div className="analytics-item">
+                                <div className="analytics-label">Total Admins</div>
+                                <div className="analytics-value">{stats.overview?.totalAdmins || 0}</div>
+                                <div className="analytics-detail">System administrators</div>
+                            </div>
+                            <div className="analytics-item">
+                                <div className="analytics-label">Total Complaints</div>
+                                <div className="analytics-value">{stats.overview?.totalComplaints || 0}</div>
+                                <div className="analytics-detail">{stats.overview?.pendingComplaints || 0} pending</div>
+                            </div>
+                            <div className="analytics-item">
+                                <div className="analytics-label">Total Hostels</div>
+                                <div className="analytics-value">{stats.overview?.totalHostels || 0}</div>
+                                <div className="analytics-detail">Managed properties</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Subscription Breakdown Chart */}
+                    <div className="section-card">
+                        <h3>📈 Subscription Distribution</h3>
+                        <div className="subscription-breakdown">
+                            {stats.subscriptionBreakdown?.map((item) => (
+                                <div key={item._id} className="subscription-item">
+                                    <div className="sub-info">
+                                        <span className="sub-name">{item._id || 'Unknown'}</span>
+                                        <span className="sub-count">{item.count} organizations</span>
+                                    </div>
+                                    <div
+                                        className="sub-badge"
+                                        style={{ backgroundColor: getPlanColor(item._id) }}
+                                    >
+                                        {item.count}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* API Info */}
+                    <div className="section-card">
+                        <h3>ℹ️ System Information</h3>
+                        <div className="system-info">
+                            <p><strong>API URL:</strong> {API_URL}</p>
+                            <p><strong>Last Updated:</strong> {new Date().toLocaleString()}</p>
+                            <button className="refresh-btn" onClick={fetchDashboardData}>
+                                🔄 Refresh Data
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Organization Details Modal */}
+            {selectedOrg && (
+                <div className="modal-overlay" onClick={() => setSelectedOrg(null)}>
+                    <motion.div
+                        className="modal-content org-details-modal"
+                        onClick={(e) => e.stopPropagation()}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                    >
+                        <h2>🏢 {selectedOrg.name}</h2>
+                        <div className="org-details">
+                            <div className="detail-row">
+                                <span className="detail-label">Subdomain:</span>
+                                <span className="detail-value">{selectedOrg.slug || selectedOrg.subdomain}.hostelease.com</span>
+                            </div>
+                            <div className="detail-row">
+                                <span className="detail-label">Plan:</span>
+                                <span className="detail-value plan-badge" style={{ backgroundColor: getPlanColor(selectedOrg.subscription?.plan || selectedOrg.subscriptionPlan) }}>
+                                    {selectedOrg.subscription?.plan || selectedOrg.subscriptionPlan || 'free'}
+                                </span>
+                            </div>
+                            <div className="detail-row">
+                                <span className="detail-label">Status:</span>
+                                <span className="detail-value status-badge" style={{ backgroundColor: getStatusColor(selectedOrg.subscription?.status || selectedOrg.subscriptionStatus) }}>
+                                    {selectedOrg.subscription?.status || selectedOrg.subscriptionStatus || 'trial'}
+                                </span>
+                            </div>
+                            <div className="detail-row">
+                                <span className="detail-label">Email:</span>
+                                <span className="detail-value">{selectedOrg.contact?.email || 'N/A'}</span>
+                            </div>
+                            <div className="detail-row">
+                                <span className="detail-label">ID:</span>
+                                <span className="detail-value" style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}>{selectedOrg._id}</span>
+                            </div>
+                        </div>
+
+                        <div className="org-stats-detail">
+                            <h4>Statistics</h4>
+                            <div className="stats-row">
+                                <div className="stat-item">
+                                    <span className="stat-num">{selectedOrg.stats?.students || 0}</span>
+                                    <span className="stat-label">Students</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-num">{selectedOrg.stats?.admins || 0}</span>
+                                    <span className="stat-label">Admins</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-num">{selectedOrg.stats?.hostels || 0}</span>
+                                    <span className="stat-label">Hostels</span>
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-num">{selectedOrg.stats?.complaints || 0}</span>
+                                    <span className="stat-label">Complaints</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="modal-actions">
+                            <button onClick={() => handleUpdateStatus(selectedOrg._id, 'active')} className="action-btn success">
+                                ✓ Set Active
+                            </button>
+                            <button onClick={() => handleUpdateStatus(selectedOrg._id, 'suspended')} className="action-btn danger">
+                                ⏸ Suspend
+                            </button>
+                            <button onClick={() => setSelectedOrg(null)}>
+                                Close
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
             )}
 
             {/* Create Organization Modal */}
@@ -401,6 +598,11 @@ const StatCard = ({ icon, title, value, subtitle, color }) => (
 const OrganizationCard = ({ org, onUpdateStatus, onViewDetails }) => {
     const [showActions, setShowActions] = useState(false);
 
+    // Handle both old flat format and new nested format
+    const subscriptionPlan = org.subscription?.plan || org.subscriptionPlan || 'free';
+    const subscriptionStatus = org.subscription?.status || org.subscriptionStatus || 'trial';
+    const subdomain = org.slug || org.subdomain || 'unknown';
+
     return (
         <motion.div
             className="organization-card"
@@ -409,7 +611,7 @@ const OrganizationCard = ({ org, onUpdateStatus, onViewDetails }) => {
             <div className="org-card-header">
                 <div>
                     <h3>{org.name}</h3>
-                    <p>{org.subdomain}.hostelease.com</p>
+                    <p>{subdomain}.hostelease.com</p>
                 </div>
                 <button
                     className="actions-btn"
@@ -429,31 +631,31 @@ const OrganizationCard = ({ org, onUpdateStatus, onViewDetails }) => {
             <div className="org-stats">
                 <div className="org-stat">
                     <span className="stat-label">Students</span>
-                    <span className="stat-num">{org.stats.students}</span>
+                    <span className="stat-num">{org.stats?.students || 0}</span>
                 </div>
                 <div className="org-stat">
                     <span className="stat-label">Admins</span>
-                    <span className="stat-num">{org.stats.admins}</span>
+                    <span className="stat-num">{org.stats?.admins || 0}</span>
                 </div>
                 <div className="org-stat">
                     <span className="stat-label">Hostels</span>
-                    <span className="stat-num">{org.stats.hostels}</span>
+                    <span className="stat-num">{org.stats?.hostels || 0}</span>
                 </div>
                 <div className="org-stat">
                     <span className="stat-label">Complaints</span>
-                    <span className="stat-num">{org.stats.complaints}</span>
+                    <span className="stat-num">{org.stats?.complaints || 0}</span>
                 </div>
             </div>
 
             <div className="org-footer">
                 <span className="plan-badge">
-                    {org.subscriptionPlan}
+                    {subscriptionPlan}
                 </span>
                 <span
                     className="status-indicator"
-                    style={{ backgroundColor: org.subscriptionStatus === 'active' ? '#10B981' : '#F59E0B' }}
+                    style={{ backgroundColor: subscriptionStatus === 'active' ? '#10B981' : '#F59E0B' }}
                 >
-                    {org.subscriptionStatus}
+                    {subscriptionStatus}
                 </span>
             </div>
         </motion.div>

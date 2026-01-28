@@ -31,6 +31,7 @@ function Home() {
 
   const getComplaints = async () => {
     const hostelData = JSON.parse(localStorage.getItem("hostel"));
+    const token = localStorage.getItem("token");
     if (!hostelData || !hostelData._id) {
       console.log("No hostel data available");
       return;
@@ -39,6 +40,7 @@ function Home() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ hostel: hostelData._id }),
     });
@@ -58,6 +60,7 @@ function Home() {
 
   const getSuggestions = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
+    const token = localStorage.getItem("token");
     if (!hostel || !hostel._id) {
       console.log("No hostel data available");
       return;
@@ -68,6 +71,7 @@ function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({ hostel: hostel._id }),
       }
@@ -91,6 +95,7 @@ function Home() {
 
   const getRequests = async () => {
     const hostel = JSON.parse(localStorage.getItem("hostel"));
+    const token = localStorage.getItem("token");
     if (!hostel || !hostel._id) {
       console.log("No hostel data available");
       return;
@@ -99,6 +104,7 @@ function Home() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify({ hostel: hostel._id }),
     });

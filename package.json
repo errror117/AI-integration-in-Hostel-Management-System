@@ -12,7 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "@emailjs/browser": "^3.11.0",
-    "email-js": "^2.0.2"
+    "axios": "^1.13.3",
+    "dotenv": "^17.2.3",
+    "email-js": "^2.0.2",
+    "mongoose": "^9.1.5"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"

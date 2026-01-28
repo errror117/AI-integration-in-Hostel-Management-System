@@ -1,0 +1,95 @@
+{
+  "totalCount": 10,
+  "organizations": [
+    {
+      "_id": "697891ee0509c5139f7e5153",
+      "name": "Bangalore Institute of Technology",
+      "slug": "bit",
+      "subscription": {
+        "plan": "professional",
+        "status": "active"
+      }
+    },
+    {
+      "_id": "697891ee0509c5139f7e514f",
+      "name": "Mumbai Engineering College",
+      "slug": "mec",
+      "subscription": {
+        "plan": "starter",
+        "status": "active"
+      }
+    },
+    {
+      "_id": "697891ee0509c5139f7e514a",
+      "name": "Delhi Technical University",
+      "slug": "dtu",
+      "subscription": {
+        "plan": "professional",
+        "status": "active"
+      }
+    },
+    {
+      "_id": "69732093498403632022e20f",
+      "name": "PDEU",
+      "slug": "pdeu",
+      "subscription": {
+        "plan": "professional",
+        "status": "active"
+      }
+    },
+    {
+      "_id": "6973208d498403632022e14f",
+      "name": "DA-IICT",
+      "slug": "da-iict",
+      "subscription": {
+        "plan": "professional",
+        "status": "active"
+      }
+    },
+    {
+      "_id": "6973200e77474fbf350fb149",
+      "name": "Marwadi University",
+      "slug": "marwadi-univ",
+      "subscription": {
+        "plan": "professional",
+        "status": "active"
+      }
+    },
+    {
+      "_id": "695e2b5df5eaef7ce6a1083c",
+      "name": "Marwadi University",
+      "slug": "mu",
+      "subscription": {
+        "plan": "professional",
+        "status": "active"
+      }
+    },
+    {
+      "_id": "695c9606b7c02c7340c93b65",
+      "name": "PQR Arts College",
+      "slug": "pqr-arts",
+      "subscription": {
+        "plan": "free",
+        "status": "trial"
+      }
+    },
+    {
+      "_id": "695c9606b7c02c7340c93b5f",
+      "name": "XYZ Medical College",
+      "slug": "xyz-med",
+      "subscription": {
+        "plan": "starter",
+        "status": "trial"
+      }
+    },
+    {
+      "_id": "695c9518c770a39d1d9853a5",
+      "name": "ABC Engineering College",
+      "slug": "abc-eng",
+      "subscription": {
+        "plan": "professional",
+        "status": "trial"
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "timestamp": "2026-01-27T11:01:09.867Z",
+  "mode": "READ_ONLY",
+  "summary": {
+    "totalOrganizations": 10,
+    "statusBreakdown": {
+      "active": 7,
+      "trial": 3,
+      "suspended": 0,
+      "cancelled": 0,
+      "expired": 0,
+      "unknown": 0
+    },
+    "issuesFound": 0
+  },
+  "organizations": [
+    {
+      "id": "695c9518c770a39d1d9853a5",
+      "name": "ABC Engineering College",
+      "slug": "abc-eng",
+      "plan": "professional",
+      "status": "trial",
+      "createdAt": "2026-01-06T04:52:40.673Z"
+    },
+    {
+      "id": "695c9606b7c02c7340c93b5f",
+      "name": "XYZ Medical College",
+      "slug": "xyz-med",
+      "plan": "starter",
+      "status": "trial",
+      "createdAt": "2026-01-06T04:56:38.574Z"
+    },
+    {
+      "id": "695c9606b7c02c7340c93b65",
+      "name": "PQR Arts College",
+      "slug": "pqr-arts",
+      "plan": "free",
+      "status": "trial",
+      "createdAt": "2026-01-06T04:56:38.629Z"
+    },
+    {
+      "id": "695e2b5df5eaef7ce6a1083c",
+      "name": "Marwadi University",
+      "slug": "mu",
+      "plan": "professional",
+      "status": "active",
+      "createdAt": "2026-01-07T09:46:05.283Z"
+    },
+    {
+      "id": "6973200e77474fbf350fb149",
+      "name": "Marwadi University",
+      "slug": "marwadi-univ",
+      "plan": "professional",
+      "status": "active",
+      "createdAt": "2026-01-23T07:15:26.774Z"
+    },
+    {
+      "id": "6973208d498403632022e14f",
+      "name": "DA-IICT",
+      "slug": "da-iict",
+      "plan": "professional",
+      "status": "active",
+      "createdAt": "2026-01-23T07:17:33.572Z"
+    },
+    {
+      "id": "69732093498403632022e20f",
+      "name": "PDEU",
+      "slug": "pdeu",
+      "plan": "professional",
+      "status": "active",
+      "createdAt": "2026-01-23T07:17:39.340Z"
+    },
+    {
+      "id": "697891ee0509c5139f7e514a",
+      "name": "Delhi Technical University",
+      "slug": "dtu",
+      "plan": "professional",
+      "status": "active",
+      "createdAt": "2026-01-27T10:22:38.415Z"
+    },
+    {
+      "id": "697891ee0509c5139f7e514f",
+      "name": "Mumbai Engineering College",
+      "slug": "mec",
+      "plan": "starter",
+      "status": "active",
+      "createdAt": "2026-01-27T10:22:38.538Z"
+    },
+    {
+      "id": "697891ee0509c5139f7e5153",
+      "name": "Bangalore Institute of Technology",
+      "slug": "bit",
+      "plan": "professional",
+      "status": "active",
+      "createdAt": "2026-01-27T10:22:38.612Z"
+    }
+  ],
+  "issues": [],
+  "recommendations": []
+}

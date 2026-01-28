@@ -321,7 +321,7 @@ exports.deleteOrganization = async (req, res) => {
         }
 
         // Soft delete - just change status
-        organization.subscriptionStatus = 'cancelled';
+        organization.subscription.status = 'cancelled';
         await organization.save();
 
         res.json({
@@ -355,8 +355,8 @@ exports.getSystemStats = async (req, res) => {
             totalHostels
         ] = await Promise.all([
             Organization.countDocuments(),
-            Organization.countDocuments({ subscriptionStatus: 'active' }),
-            Organization.countDocuments({ subscriptionStatus: 'trial' }),
+            Organization.countDocuments({ 'subscription.status': 'active' }),
+            Organization.countDocuments({ 'subscription.status': 'trial' }),
             Student.countDocuments(),
             Admin.countDocuments(),
             Complaint.countDocuments(),
@@ -364,11 +364,11 @@ exports.getSystemStats = async (req, res) => {
             Hostel.countDocuments()
         ]);
 
-        // Get subscription breakdown
+        // Get subscription breakdown - using correct nested field
         const subscriptionBreakdown = await Organization.aggregate([
             {
                 $group: {
-                    _id: '$subscriptionPlan',
+                    _id: '$subscription.plan',
                     count: { $sum: 1 }
                 }
             }
@@ -378,7 +378,7 @@ exports.getSystemStats = async (req, res) => {
         const recentOrganizations = await Organization.find()
             .sort({ createdAt: -1 })
             .limit(5)
-            .select('name subdomain subscriptionPlan subscriptionStatus createdAt');
+            .select('name slug subscription.plan subscription.status createdAt');
 
         // Get complaint stats by organization
         const complaintsByOrg = await Complaint.aggregate([
@@ -436,7 +436,7 @@ exports.updateOrganizationStatus = async (req, res) => {
 
         const organization = await Organization.findByIdAndUpdate(
             req.params.id,
-            { subscriptionStatus: status },
+            { 'subscription.status': status },
             { new: true }
         );
 

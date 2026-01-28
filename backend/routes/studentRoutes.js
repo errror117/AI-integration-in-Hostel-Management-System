@@ -113,9 +113,10 @@ router.post(
 );
 
 // @route  POST api/student/get-all-students
-// @access Public
+// @access Private (requires authentication for multi-tenancy)
 router.post(
   "/get-all-students",
+  tenantMiddleware, // ✅ Required for organizationId scoping
   [check("hostel", "Hostel is required").not().isEmpty()],
   getAllStudents
 );

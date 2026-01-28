@@ -1,13 +1,17 @@
 const getAllStudents = async () => {
     const hostelData = JSON.parse(localStorage.getItem("hostel"));
+    const token = localStorage.getItem("token");
+
     if (!hostelData || !hostelData._id) {
         console.log("No hostel data available for getAllStudents");
         return { success: false, students: [] };
     }
+
     const result = await fetch(window.API_BASE_URL + "/api/student/get-all-students", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({ hostel: hostelData._id }),
     });

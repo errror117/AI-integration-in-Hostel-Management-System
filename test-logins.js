@@ -59,7 +59,7 @@ async function runTests() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     totalTests++;
-    if (await testLogin('superadmin@hostelease.com', 'admin123', 'Super Admin')) {
+    if (await testLogin('superadmin@hostelease.com', 'SuperAdmin@123', 'Super Admin')) {
         passedTests++;
     }
 

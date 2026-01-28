@@ -1,0 +1,798 @@
+{
+  "timestamp": "2026-01-27T11:06:20.791Z",
+  "globalStats": {
+    "organizations": 10,
+    "users": 545,
+    "students": 523,
+    "admins": 10,
+    "hostels": 19,
+    "rooms": 60,
+    "complaints": 257,
+    "invoices": 111,
+    "attendance": 473,
+    "suggestions": 41,
+    "notices": 23,
+    "messOff": 26,
+    "chatLogs": 240,
+    "faqEmbeddings": 203,
+    "roleDistribution": {
+      "super_admin": 1,
+      "org_admin": 10,
+      "sub_admin": 3,
+      "student": 531
+    }
+  },
+  "organizationAudits": [
+    {
+      "id": "695c9518c770a39d1d9853a5",
+      "name": "ABC Engineering College",
+      "slug": "abc-eng",
+      "plan": "professional",
+      "status": "trial",
+      "issues": [],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 0,
+        "studentUsers": 66,
+        "studentProfiles": 66,
+        "hostels": 1,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 66,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 31,
+          "byStatus": {
+            "pending": 9,
+            "in_progress": 7,
+            "resolved": 8
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 5,
+          "studentsWithRecords": 5,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 3,
+          "byStatus": {
+            "paid": 1,
+            "pending": 2,
+            "overdue": 0
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 1,
+          "rooms": 0,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "697891ee0509c5139f7e5153",
+      "name": "Bangalore Institute of Technology",
+      "slug": "bit",
+      "plan": "professional",
+      "status": "active",
+      "issues": [],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 1,
+        "studentUsers": 8,
+        "studentProfiles": 8,
+        "hostels": 2,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 8,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 16,
+          "byStatus": {
+            "pending": 5,
+            "in_progress": 6,
+            "resolved": 5
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 56,
+          "studentsWithRecords": 8,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 16,
+          "byStatus": {
+            "paid": 7,
+            "pending": 3,
+            "overdue": 6
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 4,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 5,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 2,
+          "rooms": 20,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "6973208d498403632022e14f",
+      "name": "DA-IICT",
+      "slug": "da-iict",
+      "plan": "professional",
+      "status": "active",
+      "issues": [
+        "Student user/profile mismatch: 35 vs 34"
+      ],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 0,
+        "studentUsers": 35,
+        "studentProfiles": 34,
+        "hostels": 2,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 34,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 5,
+          "byStatus": {
+            "pending": 2,
+            "in_progress": 1,
+            "resolved": 2
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 50,
+          "studentsWithRecords": 10,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 10,
+          "byStatus": {
+            "paid": 5,
+            "pending": 4,
+            "overdue": 1
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 2,
+          "rooms": 0,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "697891ee0509c5139f7e514a",
+      "name": "Delhi Technical University",
+      "slug": "dtu",
+      "plan": "professional",
+      "status": "active",
+      "issues": [],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 1,
+        "studentUsers": 8,
+        "studentProfiles": 8,
+        "hostels": 2,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 8,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 16,
+          "byStatus": {
+            "pending": 6,
+            "in_progress": 6,
+            "resolved": 4
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 56,
+          "studentsWithRecords": 8,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 16,
+          "byStatus": {
+            "paid": 5,
+            "pending": 4,
+            "overdue": 7
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 4,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 5,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 2,
+          "rooms": 20,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "695e2b5df5eaef7ce6a1083c",
+      "name": "Marwadi University",
+      "slug": "mu",
+      "plan": "professional",
+      "status": "active",
+      "issues": [],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 0,
+        "studentUsers": 210,
+        "studentProfiles": 210,
+        "hostels": 4,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 210,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 108,
+          "byStatus": {
+            "pending": 24,
+            "in_progress": 28,
+            "resolved": 29
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 50,
+          "studentsWithRecords": 10,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 10,
+          "byStatus": {
+            "paid": 5,
+            "pending": 2,
+            "overdue": 3
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 8,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 4,
+          "rooms": 0,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "6973200e77474fbf350fb149",
+      "name": "Marwadi University",
+      "slug": "marwadi-univ",
+      "plan": "professional",
+      "status": "active",
+      "issues": [
+        "Student user/profile mismatch: 35 vs 33"
+      ],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 0,
+        "studentUsers": 35,
+        "studentProfiles": 33,
+        "hostels": 2,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 33,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 5,
+          "byStatus": {
+            "pending": 4,
+            "in_progress": 0,
+            "resolved": 1
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 50,
+          "studentsWithRecords": 10,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 10,
+          "byStatus": {
+            "paid": 3,
+            "pending": 3,
+            "overdue": 4
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 2,
+          "rooms": 0,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "697891ee0509c5139f7e514f",
+      "name": "Mumbai Engineering College",
+      "slug": "mec",
+      "plan": "starter",
+      "status": "active",
+      "issues": [],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 1,
+        "studentUsers": 8,
+        "studentProfiles": 8,
+        "hostels": 2,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 8,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 16,
+          "byStatus": {
+            "pending": 5,
+            "in_progress": 6,
+            "resolved": 5
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 56,
+          "studentsWithRecords": 8,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 16,
+          "byStatus": {
+            "paid": 8,
+            "pending": 4,
+            "overdue": 4
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 4,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 5,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 2,
+          "rooms": 20,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "69732093498403632022e20f",
+      "name": "PDEU",
+      "slug": "pdeu",
+      "plan": "professional",
+      "status": "active",
+      "issues": [
+        "Student user/profile mismatch: 35 vs 30"
+      ],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 0,
+        "studentUsers": 35,
+        "studentProfiles": 30,
+        "hostels": 2,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 30,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 5,
+          "byStatus": {
+            "pending": 3,
+            "in_progress": 0,
+            "resolved": 2
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 50,
+          "studentsWithRecords": 10,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 10,
+          "byStatus": {
+            "paid": 4,
+            "pending": 2,
+            "overdue": 4
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 2,
+          "rooms": 0,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "695c9606b7c02c7340c93b65",
+      "name": "PQR Arts College",
+      "slug": "pqr-arts",
+      "plan": "free",
+      "status": "trial",
+      "issues": [],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 0,
+        "studentUsers": 63,
+        "studentProfiles": 63,
+        "hostels": 1,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 63,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 26,
+          "byStatus": {
+            "pending": 6,
+            "in_progress": 8,
+            "resolved": 6
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 50,
+          "studentsWithRecords": 10,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 10,
+          "byStatus": {
+            "paid": 5,
+            "pending": 2,
+            "overdue": 3
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 1,
+          "rooms": 0,
+          "status": "✓ OK"
+        }
+      }
+    },
+    {
+      "id": "695c9606b7c02c7340c93b5f",
+      "name": "XYZ Medical College",
+      "slug": "xyz-med",
+      "plan": "starter",
+      "status": "trial",
+      "issues": [],
+      "stats": {
+        "orgAdmin": true,
+        "subAdmins": 0,
+        "studentUsers": 63,
+        "studentProfiles": 63,
+        "hostels": 1,
+        "adminProfile": true
+      },
+      "moduleStatus": {
+        "studentManagement": {
+          "total": 63,
+          "withoutRoom": 0,
+          "withoutHostel": 0,
+          "withoutUser": 0,
+          "status": "✓ OK"
+        },
+        "complaints": {
+          "total": 29,
+          "byStatus": {
+            "pending": 8,
+            "in_progress": 7,
+            "resolved": 8
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "attendance": {
+          "total": 50,
+          "studentsWithRecords": 10,
+          "status": "✓ OK"
+        },
+        "invoices": {
+          "total": 10,
+          "byStatus": {
+            "paid": 4,
+            "pending": 4,
+            "overdue": 2
+          },
+          "withoutStudent": 0,
+          "status": "✓ OK"
+        },
+        "messOff": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "suggestions": {
+          "total": 3,
+          "status": "✓ OK"
+        },
+        "notices": {
+          "total": 2,
+          "status": "✓ OK"
+        },
+        "hostelManagement": {
+          "hostels": 1,
+          "rooms": 0,
+          "status": "✓ OK"
+        }
+      }
+    }
+  ],
+  "dataIntegrityIssues": [],
+  "missingRelationships": [],
+  "gapAnalysis": {
+    "ok": [
+      "abc-eng:studentManagement",
+      "abc-eng:complaints",
+      "abc-eng:attendance",
+      "abc-eng:invoices",
+      "abc-eng:messOff",
+      "abc-eng:suggestions",
+      "abc-eng:notices",
+      "abc-eng:hostelManagement",
+      "bit:studentManagement",
+      "bit:complaints",
+      "bit:attendance",
+      "bit:invoices",
+      "bit:messOff",
+      "bit:suggestions",
+      "bit:notices",
+      "bit:hostelManagement",
+      "da-iict:studentManagement",
+      "da-iict:complaints",
+      "da-iict:attendance",
+      "da-iict:invoices",
+      "da-iict:messOff",
+      "da-iict:suggestions",
+      "da-iict:notices",
+      "da-iict:hostelManagement",
+      "dtu:studentManagement",
+      "dtu:complaints",
+      "dtu:attendance",
+      "dtu:invoices",
+      "dtu:messOff",
+      "dtu:suggestions",
+      "dtu:notices",
+      "dtu:hostelManagement",
+      "mu:studentManagement",
+      "mu:complaints",
+      "mu:attendance",
+      "mu:invoices",
+      "mu:messOff",
+      "mu:suggestions",
+      "mu:notices",
+      "mu:hostelManagement",
+      "marwadi-univ:studentManagement",
+      "marwadi-univ:complaints",
+      "marwadi-univ:attendance",
+      "marwadi-univ:invoices",
+      "marwadi-univ:messOff",
+      "marwadi-univ:suggestions",
+      "marwadi-univ:notices",
+      "marwadi-univ:hostelManagement",
+      "mec:studentManagement",
+      "mec:complaints",
+      "mec:attendance",
+      "mec:invoices",
+      "mec:messOff",
+      "mec:suggestions",
+      "mec:notices",
+      "mec:hostelManagement",
+      "pdeu:studentManagement",
+      "pdeu:complaints",
+      "pdeu:attendance",
+      "pdeu:invoices",
+      "pdeu:messOff",
+      "pdeu:suggestions",
+      "pdeu:notices",
+      "pdeu:hostelManagement",
+      "pqr-arts:studentManagement",
+      "pqr-arts:complaints",
+      "pqr-arts:attendance",
+      "pqr-arts:invoices",
+      "pqr-arts:messOff",
+      "pqr-arts:suggestions",
+      "pqr-arts:notices",
+      "pqr-arts:hostelManagement",
+      "xyz-med:studentManagement",
+      "xyz-med:complaints",
+      "xyz-med:attendance",
+      "xyz-med:invoices",
+      "xyz-med:messOff",
+      "xyz-med:suggestions",
+      "xyz-med:notices",
+      "xyz-med:hostelManagement"
+    ],
+    "partial": [],
+    "missing": []
+  },
+  "recommendations": [],
+  "chatbotStatus": {
+    "globalFAQs": 14,
+    "orgSpecificFAQs": 189,
+    "chatLogs": 240,
+    "status": "OPERATIONAL"
+  }
+}
