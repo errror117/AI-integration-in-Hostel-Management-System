@@ -33,23 +33,38 @@ export default function Analytics() {
 
   const fetchAllData = async () => {
     try {
+      // Get token for authenticated requests
+      const token = localStorage.getItem('token');
+      const authHeaders = {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      };
+
       // Fetch hostel stats
-      const statsRes = await fetch(window.API_BASE_URL + "/api/student/stats");
+      const statsRes = await fetch(window.API_BASE_URL + "/api/student/stats", {
+        headers: authHeaders
+      });
       const statsData = await statsRes.json();
       if (statsData.success) setStats(statsData);
 
       // Fetch predictions
-      const predRes = await fetch(window.API_BASE_URL + "/api/analytics/predictions");
+      const predRes = await fetch(window.API_BASE_URL + "/api/analytics/predictions", {
+        headers: authHeaders
+      });
       const predData = await predRes.json();
       if (predData.success) setPredictions(predData.data);
 
       // Fetch chatbot stats
-      const chatRes = await fetch(window.API_BASE_URL + "/api/analytics/chatbot-stats");
+      const chatRes = await fetch(window.API_BASE_URL + "/api/analytics/chatbot-stats", {
+        headers: authHeaders
+      });
       const chatData = await chatRes.json();
-      if (chatData.success) setChatStats(chatData.data);
+      if (chatData.success) setChatStats(chatData);
 
       // Fetch mess predictions
-      const messRes = await fetch(window.API_BASE_URL + "/api/analytics/mess-predictions");
+      const messRes = await fetch(window.API_BASE_URL + "/api/analytics/mess-predictions", {
+        headers: authHeaders
+      });
       const messData = await messRes.json();
       if (messData.success) setMessPredictions(messData.data);
 
@@ -335,9 +350,9 @@ export default function Analytics() {
                 {messPredictions?.tomorrowPrediction?.day || 'Loading...'}
               </div>
               <div className={`inline-block px-4 py-1 rounded-full text-sm font-semibold ${messPredictions?.tomorrowPrediction?.crowdLevel === 'Very High' ? 'bg-red-500/30 text-red-300' :
-                  messPredictions?.tomorrowPrediction?.crowdLevel === 'High' ? 'bg-yellow-500/30 text-yellow-300' :
-                    messPredictions?.tomorrowPrediction?.crowdLevel === 'Moderate' ? 'bg-green-500/30 text-green-300' :
-                      'bg-blue-500/30 text-blue-300'
+                messPredictions?.tomorrowPrediction?.crowdLevel === 'High' ? 'bg-yellow-500/30 text-yellow-300' :
+                  messPredictions?.tomorrowPrediction?.crowdLevel === 'Moderate' ? 'bg-green-500/30 text-green-300' :
+                    'bg-blue-500/30 text-blue-300'
                 }`}>
                 {messPredictions?.tomorrowPrediction?.crowdLevel || 'Moderate'} Crowd Expected
               </div>

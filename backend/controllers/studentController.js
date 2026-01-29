@@ -13,6 +13,26 @@ const getStats = async (req, res) => {
   try {
     const organizationId = req.organizationId; // From tenant middleware
 
+    // Handle case where organizationId is not set
+    if (!organizationId) {
+      return res.json({
+        success: true,
+        totalStudents: 0,
+        hostels: [],
+        byDept: [],
+        stats: {
+          total: 0,
+          active: 0,
+          inactive: 0,
+          byHostel: [],
+          byBatch: [],
+          byDept: [],
+        },
+      });
+    }
+
+    const orgObjId = new mongoose.Types.ObjectId(organizationId);
+
     const [
       totalStudents,
       activeStudents,
@@ -21,32 +41,42 @@ const getStats = async (req, res) => {
       studentsByBatch,
       studentsByDept,
     ] = await Promise.all([
-      Student.countDocuments({ organizationId }),
-      Student.countDocuments({ organizationId, isActive: true }),
-      Student.countDocuments({ organizationId, isActive: false }),
+      Student.countDocuments({ organizationId: orgObjId }),
+      Student.countDocuments({ organizationId: orgObjId, isActive: true }),
+      Student.countDocuments({ organizationId: orgObjId, isActive: false }),
 
       Student.aggregate([
-        { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
+        { $match: { organizationId: orgObjId } },
         { $group: { _id: "$hostel", count: { $sum: 1 } } },
         { $lookup: { from: "hostels", localField: "_id", foreignField: "_id", as: "hostelInfo" } },
-        { $unwind: "$hostelInfo" },
-        { $project: { hostel: "$hostelInfo.name", count: 1 } },
+        { $unwind: { path: "$hostelInfo", preserveNullAndEmptyArrays: true } },
+        { $project: { name: { $ifNull: ["$hostelInfo.name", "Unknown"] }, occupied: "$count", vacant: { $literal: 0 } } },
       ]),
 
       Student.aggregate([
-        { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
+        { $match: { organizationId: orgObjId } },
         { $group: { _id: "$batch", count: { $sum: 1 } } },
         { $sort: { _id: -1 } },
       ]),
 
       Student.aggregate([
-        { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
+        { $match: { organizationId: orgObjId } },
         { $group: { _id: "$dept", count: { $sum: 1 } } },
       ]),
     ]);
 
+    // Format hostel data for frontend charts
+    const hostels = studentsByHostel.map(h => ({
+      name: h.name || "Unknown",
+      occupied: h.occupied || 0,
+      vacant: h.vacant || 0
+    }));
+
     res.json({
       success: true,
+      totalStudents,
+      hostels,
+      byDept: studentsByDept,
       stats: {
         total: totalStudents,
         active: activeStudents,
@@ -58,7 +88,7 @@ const getStats = async (req, res) => {
     });
   } catch (err) {
     console.error("Get Stats Error:", err);
-    res.status(500).json({ success: false, error: "Server error" });
+    res.status(500).json({ success: false, error: err.message || "Server error" });
   }
 };
 

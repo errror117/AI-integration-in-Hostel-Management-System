@@ -205,6 +205,86 @@ const ChatWindow = () => {
     return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Handle authenticated downloads for export links
+  const handleDownload = async (url, filename) => {
+    try {
+      const token = localStorage.getItem("token");
+      // Convert absolute localhost URLs to relative API paths
+      let apiPath = url;
+      if (url.includes('localhost:3000')) {
+        apiPath = url.replace(/http:\/\/localhost:3000/, window.API_BASE_URL || '');
+      }
+
+      const response = await fetch(apiPath, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Download failed');
+      }
+
+      // Get the blob from response
+      const blob = await response.blob();
+
+      // Create download link
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename || 'export.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      // Add success message to chat
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        content: `✅ **Download Started!**\n\nYour ${filename || 'report'} is being downloaded.`,
+        timestamp: new Date().toISOString()
+      }]);
+    } catch (error) {
+      console.error('Download error:', error);
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        content: `❌ **Download Failed**\n\n${error.message || 'Could not download the file. Please try again or check if you have permission.'}`,
+        isError: true,
+        timestamp: new Date().toISOString()
+      }]);
+    }
+  };
+
+  // Custom link component that handles export downloads
+  const CustomLink = ({ href, children, ...props }) => {
+    // Check if this is an export/download link
+    const isExportLink = href && (href.includes('/api/export/') || href.includes('/export/'));
+
+    if (isExportLink) {
+      // Extract filename from URL
+      const urlParts = href.split('/');
+      const reportType = urlParts[urlParts.length - 1];
+      const filename = `${reportType}_${new Date().toISOString().split('T')[0]}.csv`;
+
+      return (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            handleDownload(href, filename);
+          }}
+          className="text-blue-300 hover:text-blue-200 hover:underline cursor-pointer inline-flex items-center gap-1 bg-transparent border-none p-0 font-inherit"
+        >
+          📥 {children}
+        </button>
+      );
+    }
+
+    // Regular external link
+    return <a className="text-blue-300 hover:underline" target="_blank" rel="noopener noreferrer" href={href} {...props}>{children}</a>;
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
       {/* Floating Action Button */}
@@ -294,7 +374,7 @@ const ChatWindow = () => {
                               li: ({ node, ...props }) => <li className="pl-1" {...props} />,
                               p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
                               strong: ({ node, ...props }) => <strong className="font-bold text-blue-200" {...props} />,
-                              a: ({ node, ...props }) => <a className="text-blue-300 hover:underline" target="_blank" {...props} />,
+                              a: CustomLink,
                               code: ({ node, ...props }) => <code className="bg-black/30 px-1 py-0.5 rounded text-xs font-mono text-yellow-300" {...props} />,
                             }}
                           >

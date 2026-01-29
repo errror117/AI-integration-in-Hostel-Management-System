@@ -121,7 +121,7 @@ router.post(
   getAllStudents
 );
 
-router.get("/stats", getStats);
+router.get("/stats", tenantMiddleware, getStats);
 // @route  POST api/student/update-student
 // @desc   Update student
 // @access Public

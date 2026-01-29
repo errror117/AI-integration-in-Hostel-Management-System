@@ -30,18 +30,29 @@ export default function AIPredictions() {
 
     const fetchPredictions = async () => {
         try {
+            // Get token for authenticated requests
+            const token = localStorage.getItem('token');
+            const authHeaders = {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
+            };
+
             // Fetch prediction data
-            const res = await fetch(window.API_BASE_URL + "/api/analytics/predictions");
+            const res = await fetch(window.API_BASE_URL + "/api/analytics/predictions", {
+                headers: authHeaders
+            });
             const data = await res.json();
             if (data.success) {
                 setPredictions(data.data);
             }
 
             // Fetch chatbot stats
-            const chatRes = await fetch(window.API_BASE_URL + "/api/analytics/chatbot-stats");
+            const chatRes = await fetch(window.API_BASE_URL + "/api/analytics/chatbot-stats", {
+                headers: authHeaders
+            });
             const chatData = await chatRes.json();
             if (chatData.success) {
-                setChatStats(chatData.data);
+                setChatStats(chatData);
             }
         } catch (err) {
             console.error("Error fetching predictions:", err);
