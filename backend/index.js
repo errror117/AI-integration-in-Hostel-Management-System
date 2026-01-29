@@ -60,6 +60,21 @@ const chatbotLimiter = rateLimit({
 
 app.use(express.json({ extended: false }));
 
+// Root route - API welcome message
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Hostel Ease API Server',
+    version: '1.0.0',
+    status: 'running',
+    documentation: '/api/health for health check',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      chatbot: '/api/chatbot'
+    }
+  });
+});
+
 // Health check endpoint for Render
 app.get('/api/health', (req, res) => {
   res.status(200).json({
